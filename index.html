@@ -1,0 +1,4806 @@
+<!DOCTYPE html>
+<html lang="en" class="dark-theme">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TuneDrop - Music Sharing PWA</title>
+    <meta name="description" content="Community-driven music sharing app">
+    <meta name="theme-color" content="#121826">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TuneDrop">
+
+    <!-- Icons -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
+    <link rel="apple-touch-icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
+
+    <!-- Icons Library -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <style>
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: rgba(30, 41, 59, 0.8);
+            --bg-glass: rgba(255, 255, 255, 0.05);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #8B5CF6;
+            --accent-hover: #7c3aed;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --admin-gold: #FFD700;
+            --admin-gold-dark: #D4AF37;
+
+            --border-radius: 20px;
+            --border-radius-sm: 12px;
+            --border-radius-lg: 28px;
+
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+            --shadow-lg: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
+            --shadow-gold: 0 0 20px rgba(255, 215, 0, 0.3);
+
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .light-theme {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #e2e8f0;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-glass: rgba(0, 0, 0, 0.05);
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --accent: #7c3aed;
+            --accent-hover: #6d28d9;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: var(--transition);
+            padding-bottom: 140px;
+        }
+
+        .glass {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .light-theme .glass {
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        /* Admin-specific styles */
+        .admin-badge {
+            background: linear-gradient(135deg, var(--admin-gold), var(--admin-gold-dark));
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-left: 6px;
+            box-shadow: var(--shadow-gold);
+            animation: pulse-gold 2s infinite;
+        }
+
+        .sub-admin-badge {
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-left: 6px;
+        }
+
+        .admin-card {
+            border: 2px solid var(--admin-gold);
+            box-shadow: var(--shadow-gold);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .admin-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--admin-gold), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes pulse-gold {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-secondary);
+            border-radius: 3px;
+        }
+
+        /* Install Prompt */
+        #install-prompt {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, var(--accent), #6d28d9);
+            color: white;
+            padding: 12px 16px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 9999;
+            box-shadow: var(--shadow);
+        }
+
+        .install-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .install-content p {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .install-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .btn-install {
+            background: white;
+            color: var(--accent);
+        }
+
+        .btn-dismiss {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        /* Top Navigation with Refresh Button */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-primary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+        }
+
+        .light-theme .top-nav {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .logo i {
+            color: var(--accent);
+            font-size: 24px;
+        }
+
+        /* Refresh Button */
+        .refresh-btn {
+            background: var(--bg-secondary);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .refresh-btn:hover {
+            background: var(--accent);
+            color: white;
+            transform: rotate(180deg);
+        }
+
+        .refresh-btn.has-updates::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .icon-btn {
+            background: var(--bg-secondary);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .icon-btn:hover {
+            background: var(--accent);
+            color: white;
+            transform: rotate(15deg);
+        }
+
+        /* Ad Containers */
+        .ad-container {
+            padding: 12px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-sm);
+            margin: 8px 16px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .ad-container:hover {
+            background: var(--bg-card);
+        }
+
+        .ad-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            opacity: 0.8;
+        }
+
+        .ad-label {
+            background: var(--accent);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            position: sticky;
+            top: 65px;
+            z-index: 90;
+            background: var(--bg-primary);
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+        }
+
+        .filter-section.hidden {
+            display: none;
+        }
+
+        .light-theme .filter-section {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-scroll {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 4px 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .filter-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-chip,
+        .mood-chip {
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            border: none;
+            border-radius: var(--border-radius-lg);
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .filter-chip.active,
+        .mood-chip.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .filter-chip:hover:not(.active),
+        .mood-chip:hover:not(.active) {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        /* Time Filter for Rank Page - SCROLLABLE FIX */
+        .time-filter {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 8px 16px;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .time-filter::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .time-filter::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .time-filter::-webkit-scrollbar-thumb {
+            background: var(--text-secondary);
+            border-radius: 2px;
+        }
+
+        .time-filter-btn {
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            border: none;
+            border-radius: var(--border-radius-lg);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .time-filter-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Main Grid */
+        .song-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            padding: 12px;
+            padding-bottom: 140px;
+            transition: var(--transition);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .modal {
+            z-index: 2000;
+        }
+
+        .warning-modal {
+            z-index: 2100;
+        }
+
+        @media (min-width: 768px) {
+            .song-grid {
+                grid-template-columns: repeat(2, 1fr);
+                max-width: 800px;
+                margin: 0 auto;
+            }
+
+            .song-grid.double-column-desktop {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .song-grid.single-column-desktop {
+                grid-template-columns: 1fr;
+                max-width: 600px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .song-grid {
+                grid-template-columns: repeat(3, 1fr);
+                max-width: 1200px;
+            }
+
+            .song-grid.double-column-desktop {
+                grid-template-columns: repeat(2, 1fr);
+                max-width: 800px;
+            }
+        }
+
+        /* Song Card */
+        .song-card {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: var(--transition);
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            min-height: 120px;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .song-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .song-card.playlist {
+            border-left: 4px solid var(--accent);
+        }
+
+        .song-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .song-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .language-badge {
+            background: var(--accent);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .playlist-tag {
+            background: var(--success);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .fav-tag {
+            background: var(--danger);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        /* Delete Button for Admin */
+        .delete-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 12px;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .song-card:hover .delete-btn {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        .song-info {
+            flex: 1;
+            min-height: 0;
+        }
+
+        .song-title {
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.3;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .song-artist {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+
+        .song-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+
+        .song-link {
+            font-size: 11px;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            word-break: break-all;
+        }
+
+        .song-link a {
+            color: var(--success);
+            text-decoration: none;
+            font-size: 10px;
+        }
+
+        .song-link a:hover {
+            text-decoration: underline;
+        }
+
+        .song-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
+        .action-buttons {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-btn {
+            background: var(--bg-secondary);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 16px;
+        }
+
+        .action-btn.liked {
+            color: var(--danger);
+        }
+
+        .action-btn.disliked {
+            color: var(--warning);
+        }
+
+        .action-btn:hover {
+            background: var(--bg-primary);
+            transform: scale(1.1);
+        }
+
+        /* Listen Button */
+        .listen-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: var(--border-radius-lg);
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            height: 32px;
+        }
+
+        .listen-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .listen-btn i {
+            font-size: 14px;
+        }
+
+        .original-link-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: var(--border-radius-lg);
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            height: 32px;
+            text-decoration: none;
+        }
+
+        .original-link-btn:hover {
+            background: #0da371;
+            transform: translateY(-2px);
+        }
+
+        .original-link-btn i {
+            font-size: 14px;
+        }
+
+        .song-buttons {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-primary);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            padding: 12px 8px 24px;
+            gap: 2px;
+            z-index: 100;
+            transition: var(--transition);
+            height: 85px;
+        }
+
+        .light-theme .bottom-nav {
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 10px 2px;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            position: relative;
+            z-index: 1;
+            min-height: 60px;
+        }
+
+        .nav-btn i {
+            font-size: 22px;
+        }
+
+        .nav-btn span {
+            font-size: 11px;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .nav-btn.active {
+            color: var(--accent);
+            background: rgba(139, 92, 246, 0.15);
+            position: relative;
+        }
+
+        .nav-btn.active::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        /* Improved FAB */
+        .nav-fab-container {
+            position: relative;
+            flex: 0 0 auto;
+            width: 70px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .nav-fab {
+            position: absolute;
+            top: -24px;
+            width: 56px;
+            height: 56px;
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition);
+            z-index: 101;
+        }
+
+        .nav-fab:hover {
+            background: var(--accent-hover);
+            transform: scale(1.05);
+        }
+
+        .nav-fab i {
+            font-size: 24px;
+        }
+
+        .nav-fab::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border-radius: 50%;
+            background: rgba(139, 92, 246, 0.2);
+            z-index: -1;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.5;
+            }
+        }
+
+        /* Bottom Player Scaffold with Favorite Button */
+        .player-scaffold {
+            position: fixed;
+            bottom: 85px;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 99;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .player-scaffold.show {
+            transform: translateY(0);
+        }
+
+        .player-info {
+            flex: 1;
+        }
+
+        .player-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .player-artist {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .player-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .player-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .player-btn:hover {
+            background: var(--accent-hover);
+            transform: scale(1.1);
+        }
+
+        .player-btn.secondary {
+            background: var(--bg-secondary);
+        }
+
+        .player-btn.secondary:hover {
+            background: var(--bg-primary);
+        }
+
+        .player-btn.favorite {
+            background: var(--danger);
+        }
+
+        .player-btn.favorite.active {
+            background: var(--danger);
+            animation: heartbeat 0.5s;
+        }
+
+        @keyframes heartbeat {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+        }
+
+        /* Vault Page Tabs */
+        .vault-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 16px;
+            padding-bottom: 140px;
+            height: calc(100vh - 140px);
+            overflow-y: auto;
+        }
+
+        .vault-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 0 16px;
+            background: var(--bg-primary);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            padding-top: 16px;
+        }
+
+        .vault-tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border: none;
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .vault-tab-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .vault-tab-btn i {
+            font-size: 18px;
+        }
+
+        .vault-content {
+            display: none;
+            padding: 0 16px;
+        }
+
+        .vault-content.active {
+            display: block;
+        }
+
+        /* IMPROVED RANK PAGE CARDS */
+        .leaderboard-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 16px;
+            padding-bottom: 140px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .leaderboard-card {
+            background: linear-gradient(135deg,
+                    rgba(30, 41, 59, 0.9),
+                    rgba(139, 92, 246, 0.15),
+                    rgba(30, 41, 59, 0.9));
+            border-radius: var(--border-radius);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: var(--transition);
+            width: 100%;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .leaderboard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg,
+                    var(--accent),
+                    #3B82F6,
+                    var(--accent));
+            background-size: 200% 100%;
+            animation: shimmer-border 3s infinite linear;
+        }
+
+        .leaderboard-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--accent);
+        }
+
+        @keyframes shimmer-border {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .leaderboard-rank {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent);
+            min-width: 50px;
+            text-align: center;
+            text-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+        }
+
+        .leaderboard-info {
+            flex: 1;
+        }
+
+        .leaderboard-title {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            line-height: 1.3;
+            background: linear-gradient(90deg, var(--text-primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .leaderboard-details {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .leaderboard-artist {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .leaderboard-link {
+            font-size: 12px;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .leaderboard-link a {
+            color: var(--success);
+            text-decoration: none;
+        }
+
+        .leaderboard-link a:hover {
+            text-decoration: underline;
+        }
+
+        .leaderboard-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        .leaderboard-likes {
+            color: var(--success);
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .leaderboard-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* User Leaderboard Cards */
+        .leaderboard-user-card {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: var(--transition);
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .leaderboard-user-avatar {
+            width: 48px;
+            height: 48px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        /* Rank Page Tabs */
+        .rank-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 0 16px;
+        }
+
+        .rank-tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border: none;
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .rank-tab-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* IMPROVED POST MODAL - Fixed mood icons overlapping */
+        .form-group {
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .form-group i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 18px;
+        }
+
+        .form-group.with-icon .form-input,
+        .form-group.with-icon .form-select {
+            padding-left: 48px;
+        }
+
+        .mood-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .mood-option {
+            padding: 16px 8px;
+            background: var(--bg-secondary);
+            border: none;
+            border-radius: var(--border-radius-sm);
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-height: 80px;
+        }
+
+        .mood-option i {
+            font-size: 24px;
+            position: static;
+            transform: none;
+            margin-bottom: 4px;
+        }
+
+        .mood-option.active {
+            background: var(--accent);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .mood-option:hover:not(.active) {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        /* Updated Mood Icons */
+        .mood-chill i {
+            color: #60a5fa;
+        }
+
+        .mood-party i {
+            color: #f59e0b;
+        }
+
+        .mood-indie i {
+            color: #10b981;
+        }
+
+        .mood-rock i {
+            color: #ef4444;
+        }
+
+        .mood-pop i {
+            color: #ec4899;
+        }
+
+        .mood-rap i {
+            color: #8b5cf6;
+        }
+
+        .mood-option.active.mood-chill i,
+        .mood-option.active.mood-party i,
+        .mood-option.active.mood-indie i,
+        .mood-option.active.mood-rock i,
+        .mood-option.active.mood-pop i,
+        .mood-option.active.mood-rap i {
+            color: white;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-btn:hover {
+            color: var(--danger);
+            transform: rotate(90deg);
+        }
+
+        /* Warning Modal */
+        .warning-modal .modal-content {
+            max-width: 350px;
+            text-align: center;
+        }
+
+        .warning-icon {
+            font-size: 48px;
+            color: var(--warning);
+            margin-bottom: 16px;
+        }
+
+        .warning-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .warning-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .warning-btn.confirm {
+            background: var(--danger);
+            color: white;
+        }
+
+        .warning-btn.cancel {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        /* Welcome Modal */
+        .welcome-modal .modal-content {
+            max-width: 500px;
+        }
+
+        .welcome-illustration {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .welcome-illustration i {
+            font-size: 64px;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .welcome-illustration h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .welcome-illustration p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .username-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .username-check .loading {
+            width: 16px;
+            height: 16px;
+        }
+
+        .username-available {
+            color: var(--success);
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .username-taken {
+            color: var(--danger);
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        /* Form Styles */
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 2px solid transparent;
+            border-radius: var(--border-radius-sm);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: var(--bg-primary);
+        }
+
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-sm);
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 28px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--text-secondary);
+            transition: var(--transition);
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: var(--transition);
+            border-radius: 50%;
+        }
+
+        input:checked+.toggle-slider {
+            background-color: var(--accent);
+        }
+
+        input:checked+.toggle-slider:before {
+            transform: translateX(22px);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-lg);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Daily Post Limit Warning */
+        .post-limit-warning {
+            background: var(--warning);
+            color: white;
+            padding: 8px 12px;
+            border-radius: var(--border-radius-sm);
+            font-size: 12px;
+            text-align: center;
+            margin-top: 12px;
+            display: none;
+        }
+
+        /* Settings Page */
+        .settings-section {
+            margin-bottom: 24px;
+        }
+
+        .settings-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .layout-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .layout-option {
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: none;
+            border-radius: var(--border-radius-sm);
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .layout-option.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .layout-option i {
+            font-size: 24px;
+        }
+
+        .color-picker {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .color-options {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .color-option {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .color-option.active::after {
+            content: "✓";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        /* FIXED Toast Notifications - Adjusted z-index */
+        #toast {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            z-index: 90;
+            /* Lower than bottom nav (100) */
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 90%;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast-icon {
+            font-size: 20px;
+        }
+
+        .toast.success .toast-icon {
+            color: var(--success);
+        }
+
+        .toast.error .toast-icon {
+            color: var(--danger);
+        }
+
+        .toast.info .toast-icon {
+            color: var(--accent);
+        }
+
+        .toast.warning .toast-icon {
+            color: var(--warning);
+        }
+
+        /* Offline Indicator */
+        .offline-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--danger);
+            color: white;
+            padding: 8px 16px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            z-index: 9999;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .offline-indicator.show {
+            transform: translateY(0);
+        }
+
+        /* Loading States */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--bg-secondary);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-primary) 50%, var(--bg-secondary) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: var(--border-radius-sm);
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* Empty States */
+        .empty-state {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .empty-state .btn {
+            margin-top: 16px;
+        }
+
+        /* Tab Pages */
+        .tab-page {
+            display: none;
+            min-height: calc(100vh - 140px);
+        }
+
+        .tab-page.active {
+            display: block;
+        }
+
+        .achievement-badge {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .achievement-badge i {
+            font-size: 40px;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .achievement-badge.locked {
+            opacity: 0.5;
+        }
+
+        .achievement-badge.locked i {
+            color: var(--text-secondary);
+        }
+
+        .badge-progress {
+            height: 4px;
+            background: var(--bg-secondary);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .badge-progress-bar {
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        /* Confetti effect */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: confettiFall 1s ease-out forwards;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* User Stats */
+        .user-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Offline Indicator -->
+    <div id="offline-indicator" class="offline-indicator">
+        <i class="ri-wifi-off-line"></i> You're offline. Some features may be limited.
+    </div>
+
+    <!-- Install PWA Prompt -->
+    <div id="install-prompt" class="install-prompt">
+        <div class="install-content">
+            <p>🎵 Install TuneDrop for the best experience</p>
+            <div class="install-buttons">
+                <button id="install-btn" class="btn btn-install">Install</button>
+                <button id="dismiss-install" class="btn btn-dismiss">Later</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Warning Modal for Clean Vault -->
+    <div id="warning-modal" class="modal warning-modal">
+        <div class="modal-content glass">
+            <div class="warning-icon">
+                <i class="ri-error-warning-fill"></i>
+            </div>
+            <h2>Clean Vault</h2>
+            <p>This will remove all songs from your vault. This action cannot be undone.</p>
+            <div class="warning-buttons">
+                <button class="warning-btn cancel" id="cancel-clean">Cancel</button>
+                <button class="warning-btn confirm" id="confirm-clean">Clean Vault</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome Modal -->
+    <div id="welcome-modal" class="modal welcome-modal">
+        <div class="modal-content glass">
+            <div class="welcome-illustration">
+                <i class="ri-music-2-fill"></i>
+                <h2>Welcome to TuneDrop!</h2>
+                <p>Share and discover music with the community.<br>Choose a unique username to get started.</p>
+            </div>
+
+            <form id="welcome-form">
+                <div class="form-group">
+                    <input type="text" class="form-input" id="welcome-username" placeholder="Choose a username"
+                        required>
+                    <!-- <small style="color: var(--text-secondary); font-size: 12px; display: block; margin-top: 4px;">
+                        Usernames starting with "admin" are reserved
+                    </small> -->
+                    <div id="username-feedback" class="username-available" style="display: none;"></div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submit-username">
+                    <i class="ri-user-follow-fill"></i>
+                    <span>Start Listening</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div class="app-container" style="display: none;">
+        <!-- Top Ad Container -->
+        <!-- <div id="ad-container-top" class="ad-container">
+            <div class="ad-content">
+                <span class="ad-label">Ad</span>
+                <span>Upgrade to Premium for ad-free experience</span>
+            </div>
+        </div> -->
+
+        <!-- Top Navigation with Refresh Button -->
+        <header class="top-nav">
+            <div class="logo-container">
+                <div class="logo">
+                    <i class="ri-music-2-fill"></i>
+                    <h1>tune<span style="color: var(--accent)">Drop</span></h1>
+                </div>
+                <button id="refresh-btn" class="refresh-btn" title="Check for new songs">
+                    <i class="ri-refresh-line"></i>
+                </button>
+            </div>
+            <button id="settings-btn" class="icon-btn">
+                <i class="ri-settings-4-line"></i>
+            </button>
+        </header>
+
+        <!-- Filter Section -->
+        <section class="filter-section" id="filter-section">
+            <div class="filter-row">
+                <div class="filter-scroll" id="language-filter">
+                    <button class="filter-chip active" data-lang="all">All</button>
+                    <button class="filter-chip" data-lang="english">English</button>
+                    <button class="filter-chip" data-lang="hindi">Hindi</button>
+                    <button class="filter-chip" data-lang="telugu">Telugu</button>
+                    <button class="filter-chip" data-lang="tamil">Tamil</button>
+                    <button class="filter-chip" data-lang="spanish">Spanish</button>
+                    <button class="filter-chip" data-lang="korean">Korean</button>
+                </div>
+            </div>
+            <div class="filter-row">
+                <div class="filter-scroll" id="mood-filter">
+                    <button class="mood-chip active" data-mood="all">All Vibe</button>
+                    <button class="mood-chip" data-mood="chill">😌 Chill</button>
+                    <button class="mood-chip" data-mood="party">🎉 Party</button>
+                    <button class="mood-chip" data-mood="indie">🎸 Indie</button>
+                    <button class="mood-chip" data-mood="rock">🤘 Rock</button>
+                    <button class="mood-chip" data-mood="pop">🎤 Pop</button>
+                    <button class="mood-chip" data-mood="rap">🎤 Rap</button>
+                    <button class="mood-chip" data-mood="electronic">⚡ Electronic</button>
+                    <button class="mood-chip" data-mood="romantic">💖 Romantic</button>
+                    <button class="mood-chip" data-mood="workout">💪 Workout</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab Pages -->
+        <main id="home-page" class="tab-page active">
+            <div id="song-grid" class="song-grid">
+                <!-- Songs loaded dynamically -->
+            </div>
+        </main>
+
+        <main id="leaderboard-page" class="tab-page">
+            <!-- Rank Tabs -->
+            <div class="rank-tabs" id="rank-tabs">
+                <button class="rank-tab-btn active" data-rank-type="songs">Top Songs</button>
+                <button class="rank-tab-btn" data-rank-type="users">Top Contributors</button>
+            </div>
+
+            <!-- Time Filter - SCROLLABLE FIX -->
+            <div class="time-filter" id="time-filter">
+                <button class="time-filter-btn active" data-period="day">Today</button>
+                <button class="time-filter-btn" data-period="week">Last Week</button>
+                <button class="time-filter-btn" data-period="month">Last Month</button>
+                <button class="time-filter-btn" data-period="year">Last Year</button>
+                <button class="time-filter-btn" data-period="lifetime">Lifetime</button>
+            </div>
+
+            <!-- Songs Leaderboard -->
+            <div id="songs-leaderboard" class="leaderboard-grid">
+                <!-- Songs leaderboard loaded dynamically -->
+            </div>
+
+            <!-- Users Leaderboard -->
+            <div id="users-leaderboard" class="leaderboard-grid" style="display: none;">
+                <!-- Users leaderboard loaded dynamically -->
+            </div>
+        </main>
+
+        <!-- VAULT PAGE WITH TABS -->
+        <main id="vault-page" class="tab-page">
+            <!-- Vault Tabs -->
+            <div class="vault-tabs" id="vault-tabs">
+                <button class="vault-tab-btn active" data-vault-tab="favs">
+                    <i class="ri-heart-fill"></i>
+                    <span>Favorites</span>
+                </button>
+                <button class="vault-tab-btn" data-vault-tab="listened">
+                    <i class="ri-history-fill"></i>
+                    <span>History</span>
+                </button>
+            </div>
+
+            <!-- Favorites Content -->
+            <div id="favs-content" class="vault-content active">
+                <div id="fav-grid" class="song-grid">
+                    <!-- Favorite songs loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- Listened Content -->
+            <div id="listened-content" class="vault-content">
+                <div id="listened-grid" class="song-grid">
+                    <!-- Listened songs loaded dynamically -->
+                </div>
+            </div>
+        </main>
+
+        <main id="achievements-page" class="tab-page">
+            <div class="song-grid" style="grid-template-columns: repeat(2, 1fr);" id="badges-grid">
+                <!-- Badges loaded dynamically -->
+            </div>
+        </main>
+
+        <!-- Bottom Player Scaffold with Favorite Button -->
+        <div id="player-scaffold" class="player-scaffold">
+            <div class="player-info">
+                <div class="player-title" id="player-title">No song playing</div>
+                <div class="player-artist" id="player-artist">Tap a song to play</div>
+            </div>
+            <div class="player-controls">
+                <button class="player-btn secondary" id="player-close">
+                    <i class="ri-close-line"></i>
+                </button>
+                <button class="player-btn favorite" id="player-favorite" title="Add to favorites">
+                    <i class="ri-heart-line"></i>
+                </button>
+                <button class="player-btn" id="player-play">
+                    <i class="ri-play-fill"></i>
+                </button>
+                <a class="player-btn secondary" id="player-link" target="_blank">
+                    <i class="ri-external-link-line"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-tab="home">
+                <i class="ri-home-5-line"></i>
+                <span>Home</span>
+            </button>
+            <button class="nav-btn" data-tab="leaderboard">
+                <i class="ri-trophy-line"></i>
+                <span>Rank</span>
+            </button>
+            <div class="nav-fab-container">
+                <button class="nav-fab" id="post-fab">
+                    <i class="ri-add-line"></i>
+                </button>
+            </div>
+            <button class="nav-btn" data-tab="vault">
+                <i class="ri-archive-line"></i>
+                <span>Vault</span>
+            </button>
+            <button class="nav-btn" data-tab="achievements">
+                <i class="ri-award-line"></i>
+                <span>Badges</span>
+            </button>
+        </nav>
+
+        <!-- Bottom Ad Container -->
+        <!-- <div id="ad-container-bottom" class="ad-container">
+            <div class="ad-content">
+                <span class="ad-label">Ad</span>
+                <span>Support indie artists on TuneDrop</span>
+            </div>
+        </div> -->
+    </div>
+
+    <!-- Post Modal -->
+    <div id="post-modal" class="modal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2>Drop a Track</h2>
+                <button class="close-btn" id="close-post-modal">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+
+            <!-- Daily Post Limit Warning -->
+            <div id="post-limit-warning" class="post-limit-warning">
+                <i class="ri-error-warning-fill"></i> Daily limit reached (10 posts/day)
+            </div>
+
+            <form id="post-form">
+                <!-- Song Title with Icon -->
+                <div class="form-group with-icon">
+                    <i class="ri-music-2-line"></i>
+                    <input type="text" class="form-input" id="song-title" placeholder="Song/Playlist Name" required
+                        minlength="3" maxlength="100">
+                </div>
+
+                <!-- Artist with Icon -->
+                <div class="form-group with-icon">
+                    <i class="ri-user-3-line"></i>
+                    <input type="text" class="form-input" id="song-artist" placeholder="Artist (Optional)" minlength="2"
+                        maxlength="50">
+                </div>
+
+                <!-- Language with Icon -->
+                <div class="form-group with-icon">
+                    <i class="ri-global-line"></i>
+                    <select class="form-select" id="song-language" required>
+                        <option value="">Select Language</option>
+                        <option value="english">English</option>
+                        <option value="hindi">Hindi</option>
+                        <option value="telugu">Telugu</option>
+                        <option value="tamil">Tamil</option>
+                        <option value="spanish">Spanish</option>
+                        <option value="korean">Korean</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <!-- Mood Selector with Improved Icons - FIXED OVERLAPPING -->
+                <div class="form-group">
+                    <div class="mood-selector" id="mood-selector">
+                        <button type="button" class="mood-option mood-chill" data-mood="chill">
+                            <i class="ri-moon-line"></i>
+                            <span>Chill</span>
+                        </button>
+                        <button type="button" class="mood-option mood-party" data-mood="party">
+                            <i class="ri-fire-line"></i>
+                            <span>Party</span>
+                        </button>
+                        <button type="button" class="mood-option mood-indie" data-mood="indie">
+                            <i class="ri-music-2-line"></i>
+                            <span>Indie</span>
+                        </button>
+                        <button type="button" class="mood-option mood-rock" data-mood="rock">
+                            <i class="ri-headphone-line"></i>
+                            <span>Rock</span>
+                        </button>
+                        <button type="button" class="mood-option mood-pop" data-mood="pop">
+                            <i class="ri-disc-line"></i>
+                            <span>Pop</span>
+                        </button>
+                        <button type="button" class="mood-option mood-rap" data-mood="rap">
+                            <i class="ri-quill-pen-line"></i>
+                            <span>Rap</span>
+                        </button>
+                    </div>
+                    <input type="hidden" id="selected-mood" required>
+                </div>
+
+                <!-- Link with Icon -->
+                <div class="form-group with-icon">
+                    <i class="ri-link"></i>
+                    <input type="url" class="form-input" id="original-link" placeholder="YouTube/Spotify Link"
+                        pattern="https?://.+">
+                    <small style="color: var(--text-secondary); font-size: 12px; display: none;" id="link-required">Link
+                        is required for playlists</small>
+                </div>
+
+                <!-- Playlist Toggle -->
+                <div class="toggle-group">
+                    <span class="toggle-label">This is a Playlist</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="is-playlist">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-submit" id="submit-post">
+                    <i class="ri-send-plane-fill"></i>
+                    <span>Drop Track</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="close-btn" id="close-settings-modal">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+
+            <div class="settings-section">
+                <h3>Appearance</h3>
+                <div class="toggle-group">
+                    <span class="toggle-label">Dark Mode</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="theme-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="color-picker">
+                    <h4>Accent Color</h4>
+                    <div class="color-options" id="color-options">
+                        <button class="color-option active" data-color="#8B5CF6"
+                            style="background-color: #8B5CF6;"></button>
+                        <button class="color-option" data-color="#3B82F6" style="background-color: #3B82F6;"></button>
+                        <button class="color-option" data-color="#10B981" style="background-color: #10B981;"></button>
+                        <button class="color-option" data-color="#F59E0B" style="background-color: #F59E0B;"></button>
+                        <button class="color-option" data-color="#EF4444" style="background-color: #EF4444;"></button>
+                        <button class="color-option" data-color="#EC4899" style="background-color: #EC4899;"></button>
+                        <button class="color-option" data-color="#1e293b" style="background-color: #1e293b;"></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>Music Service</h3>
+                <select class="form-select" id="service-select">
+                    <option value="YouTube Music">YouTube Music</option>
+                    <option value="Spotify">Spotify</option>
+                    <option value="Apple Music">Apple Music</option>
+                    <option value="YouTube">YouTube</option>
+                </select>
+            </div>
+
+            <div class="settings-section">
+                <h3>Account</h3>
+                <div class="form-group">
+                    <input type="text" class="form-input" id="username-input" placeholder="Change Username">
+                </div>
+                <button class="btn-submit" id="save-settings">
+                    <i class="ri-save-line"></i>
+                    <span>Save Settings</span>
+                </button>
+                <button class="btn-submit" id="clean-vault" style="margin-top: 8px; background: var(--accent);">
+                    <i class="ri-delete-bin-line"></i>
+                    <span>Clean Vault</span>
+                </button>
+            </div>
+
+            <!-- User Stats -->
+            <div class="settings-section">
+                <h3>Your Stats</h3>
+                <div class="user-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-posts">0</div>
+                        <div class="stat-label">Posts</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-likes">0</div>
+                        <div class="stat-label">Likes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-listens">0</div>
+                        <div class="stat-label">Listens</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-badges">0</div>
+                        <div class="stat-label">Badges</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification - FIXED Z-INDEX -->
+    <div id="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ========== CONFIGURATION ==========
+        const SUPABASE_URL = 'https://wortmlinpglxopuplcur.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndvcnRtbGlucGdseG9wdXBsY3VyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2NzkxNjgsImV4cCI6MjA4MjI1NTE2OH0.jwzlvJg444Xgl_w8MMGIsqi8DZyefBHtAM_UI4dhiZ4';
+
+        // ========== ADMIN CONFIGURATION ==========
+        const ADMIN_CONFIG = {
+            // Super Admin (you) - can add more sub-admins as needed
+            superAdmin: {
+                displayName: 'admin',
+                dbUsername: 'admin_super', // Hidden from users
+                isSuperAdmin: true
+            },
+            subAdmins: [
+                { displayName: 'admin01', dbUsername: 'admin_01' },
+                { displayName: 'admin02', dbUsername: 'admin_02' },
+                { displayName: 'admin03', dbUsername: 'admin_03' }
+            ],
+            // Maximum posts per day per user
+            dailyPostLimit: 10,
+            // Content validation rules
+            contentRules: {
+                minTitleLength: 3,
+                maxTitleLength: 100,
+                minArtistLength: 2,
+                maxArtistLength: 50,
+                // Regex to detect gibberish (simple pattern)
+                gibberishPattern: /^([a-z])\1{2,}$/i, // Matches repeated characters like "aaa"
+                urlPattern: /https?:\/\/[^\s]+$/ // Valid URL pattern
+            }
+        };
+
+        // ========== GLOBALLY AVAILABLE OBJECTS ==========
+        window.tunedrop = {
+            supabase: null,
+            state: {
+                currentUser: null,
+                currentTab: 'home',
+                currentLanguage: 'all',
+                currentMood: 'all',
+                currentTimeFilter: 'day', // Changed to 'day' as default
+                currentRankType: 'songs',
+                currentVaultTab: 'favs',
+                likedSongs: new Set(),
+                dislikedSongs: new Set(), // NEW: Track disliked songs
+                vaultSongs: new Set(),
+                badges: new Set(),
+                userStats: {
+                    posts: 0,
+                    likesGiven: 0,
+                    dislikesGiven: 0, // NEW: Track dislikes given
+                    listens: 0,
+                    likedByOthers: 0,
+                    dislikedByOthers: 0 // NEW: Track dislikes received
+                },
+                isLoading: false,
+                username: null,
+                dbUsername: null, // NEW: Separate database username
+                musicService: 'YouTube Music',
+                currentPlaying: null,
+                cardLayout: 'double',
+                // NEW: Track new content
+                lastRefreshTime: null,
+                hasNewContent: false,
+                // NEW: Track daily posts
+                dailyPosts: 0,
+                lastPostDate: null,
+                // NEW: Track if user is admin
+                isAdmin: false,
+                isSubAdmin: false
+            },
+            elements: null
+        };
+
+        // ========== HELPER FUNCTIONS ==========
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="toast-icon ri-${type === 'success' ? 'check' : type === 'error' ? 'close' : type === 'warning' ? 'error-warning' : 'information'}-circle-fill"></i>
+                <span>${message}</span>
+            `;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        /**
+         * Check if user is admin (super or sub)
+         */
+        function checkAdminStatus(username, dbUsername) {
+            // Check if super admin
+            if (dbUsername === ADMIN_CONFIG.superAdmin.dbUsername) {
+                return { isAdmin: true, isSuperAdmin: true, displayName: ADMIN_CONFIG.superAdmin.displayName };
+            }
+
+            // Check if sub admin
+            const subAdmin = ADMIN_CONFIG.subAdmins.find(admin => admin.dbUsername === dbUsername);
+            if (subAdmin) {
+                return { isAdmin: true, isSuperAdmin: false, displayName: subAdmin.displayName };
+            }
+
+            return { isAdmin: false, isSuperAdmin: false, displayName: username };
+        }
+
+        /**
+         * Validate content before posting
+         */
+        function validateContent(title, artist = '') {
+            const rules = ADMIN_CONFIG.contentRules;
+
+            // Check title length
+            if (title.length < rules.minTitleLength || title.length > rules.maxTitleLength) {
+                return { valid: false, message: `Title must be between ${rules.minTitleLength} and ${rules.maxTitleLength} characters` };
+            }
+
+            // Check artist length if provided
+            if (artist && (artist.length < rules.minArtistLength || artist.length > rules.maxArtistLength)) {
+                return { valid: false, message: `Artist name must be between ${rules.minArtistLength} and ${rules.maxArtistLength} characters` };
+            }
+
+            // Check for gibberish in title
+            if (rules.gibberishPattern.test(title)) {
+                return { valid: false, message: 'Title appears to be gibberish' };
+            }
+
+            // Check for gibberish in artist
+            if (artist && rules.gibberishPattern.test(artist)) {
+                return { valid: false, message: 'Artist name appears to be gibberish' };
+            }
+
+            return { valid: true, message: 'Content is valid' };
+        }
+
+        /**
+         * Check daily post limit
+         */
+        async function checkDailyPostLimit() {
+            try {
+                const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+                // If we already have today's count in state and date matches
+                if (window.tunedrop.state.lastPostDate === today) {
+                    return window.tunedrop.state.dailyPosts < ADMIN_CONFIG.dailyPostLimit;
+                }
+
+                // Query database for today's posts by this user
+                const { data, error } = await window.tunedrop.supabase
+                    .from('items')
+                    .select('created_at')
+                    .eq('poster_username', window.tunedrop.state.dbUsername)
+                    .gte('created_at', `${today}T00:00:00.000Z`)
+                    .lt('created_at', `${today}T23:59:59.999Z`);
+
+                if (error) throw error;
+
+                // Update state
+                window.tunedrop.state.dailyPosts = data.length;
+                window.tunedrop.state.lastPostDate = today;
+
+                // Check against limit
+                const canPost = data.length < ADMIN_CONFIG.dailyPostLimit;
+
+                // Show warning if limit reached
+                if (!canPost) {
+                    showToast(`Daily limit reached (${ADMIN_CONFIG.dailyPostLimit} posts/day)`, 'warning');
+                }
+
+                return canPost;
+            } catch (error) {
+                console.error('Error checking daily post limit:', error);
+                return true; // Allow posting on error
+            }
+        }
+
+        /**
+         * Creates a compact song card for home/vault pages
+         */
+        function createSongCard(song, isVault = false, isFav = false) {
+            const card = document.createElement('div');
+
+            // Check if current user is admin and song belongs to them or they have admin rights
+            const isCurrentUserPoster = song.poster_username === window.tunedrop.state.dbUsername;
+            const showDeleteBtn = window.tunedrop.state.isAdmin && (isCurrentUserPoster || window.tunedrop.state.isSuperAdmin);
+
+            // Add admin class if admin posted this
+            const isAdminPost = checkAdminStatus(song.poster_username, song.poster_username).isAdmin;
+
+            card.className = `song-card ${song.type === 'playlist' ? 'playlist' : ''} ${isAdminPost ? 'admin-card' : ''}`;
+            card.dataset.songId = song.id;
+            card.dataset.language = song.language;
+            card.dataset.mood = song.mood;
+            card.dataset.poster = song.poster_username;
+            card.dataset.title = song.title;
+            card.dataset.artist = song.artist;
+            card.dataset.link = song.original_link || '';
+
+            const isLiked = window.tunedrop.state.likedSongs.has(song.id.toString());
+            const isDisliked = window.tunedrop.state.dislikedSongs.has(song.id.toString()); // NEW
+
+            // Format original link for display
+            let linkDisplay = '';
+            if (song.original_link) {
+                try {
+                    const url = new URL(song.original_link);
+                    linkDisplay = url.hostname.replace('www.', '');
+                } catch (e) {
+                    linkDisplay = 'Link';
+                }
+            }
+
+            // Format date
+            const date = new Date(song.created_at);
+            const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            // Check if poster is admin
+            const posterAdminStatus = checkAdminStatus(song.poster_username, song.poster_username);
+            const adminBadge = posterAdminStatus.isAdmin
+                ? (posterAdminStatus.isSuperAdmin
+                    ? '<span class="admin-badge">ADMIN</span>'
+                    : '<span class="sub-admin-badge">MOD</span>')
+                : '';
+
+            card.innerHTML = `
+                ${showDeleteBtn ? '<button class="delete-btn" data-action="delete" data-song-id="' + song.id + '"><i class="ri-delete-bin-line"></i></button>' : ''}
+                <div class="song-header">
+                    <div class="song-info" style="flex: 1;">
+                        <h3 class="song-title">${song.title || 'Unknown Title'}</h3>
+                        <p class="song-artist">${song.artist || 'Unknown Artist'}</p>
+                    </div>
+                    <div class="song-header-right">
+                        ${song.type === 'playlist' ? '<span class="playlist-tag">Playlist</span>' : ''}
+                        ${isFav ? '<span class="fav-tag">♥</span>' : ''}
+                        <span class="language-badge">${song.language?.substring(0, 3)?.toUpperCase() || 'ENG'}</span>
+                    </div>
+                </div>
+                
+                <div class="song-meta">
+                    <span>@${posterAdminStatus.displayName || 'anonymous'}${adminBadge}</span>
+                    <span>•</span>
+                    <span>${formattedDate}</span>
+                    ${song.original_link ? `
+                        <span>•</span>
+                        <div class="song-link">
+                            <a href="${song.original_link}" target="_blank" onclick="event.stopPropagation();">${linkDisplay}</a>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="song-actions">
+                    <div class="action-buttons">
+                        <button class="action-btn ${isLiked ? 'liked' : ''}" data-action="like" data-song-id="${song.id}">
+                            <i class="${isLiked ? 'ri-heart-fill' : 'ri-heart-line'}"></i>
+                            <span class="like-count">${song.likes || 0}</span>
+                        </button>
+                        <button class="action-btn ${isDisliked ? 'disliked' : ''}" data-action="dislike" data-song-id="${song.id}">
+                            <i class="${isDisliked ? 'ri-thumb-down-fill' : 'ri-thumb-down-line'}"></i>
+                            <span class="dislike-count">${song.dislikes || 0}</span>
+                        </button>
+                    </div>
+                    <div class="song-buttons">
+                        ${song.original_link ? `
+                            <a href="${song.original_link}" target="_blank" class="original-link-btn" data-action="original-link" data-song-id="${song.id}">
+                                <i class="ri-external-link-line"></i>
+                                <span>Link</span>
+                            </a>
+                        ` : ''}
+                        <button class="listen-btn" data-action="listen" data-song-id="${song.id}">
+                            <i class="ri-play-fill"></i>
+                            <span>Play</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        /**
+         * Creates a leaderboard card for rank page
+         */
+        function createLeaderboardCard(song, index, timePeriod) {
+            const card = document.createElement('div');
+            card.className = 'leaderboard-card';
+
+            // Calculate like count based on time period
+            const likeCount = timePeriod === 'lifetime'
+                ? (song.likes || 0)
+                : (song.recent_likes || song.likes || 0);
+
+            // Format original link for display
+            let linkDisplay = '';
+            if (song.original_link) {
+                try {
+                    const url = new URL(song.original_link);
+                    linkDisplay = url.hostname.replace('www.', '');
+                } catch (e) {
+                    linkDisplay = 'Link';
+                }
+            }
+
+            // Format date
+            const date = new Date(song.created_at);
+            const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            // Check if poster is admin
+            const posterAdminStatus = checkAdminStatus(song.poster_username, song.poster_username);
+            const adminBadge = posterAdminStatus.isAdmin
+                ? (posterAdminStatus.isSuperAdmin
+                    ? '<span class="admin-badge">ADMIN</span>'
+                    : '<span class="sub-admin-badge">MOD</span>')
+                : '';
+
+            card.innerHTML = `
+                <div class="leaderboard-rank">${index + 1}</div>
+                <div class="leaderboard-info">
+                    <h3 class="leaderboard-title">${song.title}</h3>
+                    <div class="leaderboard-details">
+                        <span class="leaderboard-artist">${song.artist || 'Unknown Artist'}</span>
+                        <span>•</span>
+                        <span class="leaderboard-artist">@${posterAdminStatus.displayName || 'anonymous'}${adminBadge}</span>
+                        <span>•</span>
+                        <span class="leaderboard-artist">${formattedDate}</span>
+                    </div>
+                    ${song.original_link ? `
+                        <div class="leaderboard-link">
+                            <i class="ri-link"></i>
+                            <a href="${song.original_link}" target="_blank" onclick="event.stopPropagation();">${linkDisplay}</a>
+                        </div>
+                    ` : ''}
+                    <div class="leaderboard-stats">
+                        <div class="leaderboard-likes">
+                            <i class="ri-heart-fill"></i>
+                            <span>${likeCount} ${likeCount === 1 ? 'like' : 'likes'}</span>
+                            ${timePeriod !== 'lifetime' ? `
+                                <small style="color: var(--text-secondary); font-size: 12px; margin-left: 4px;">
+                                    (last ${timePeriod})
+                                </small>
+                            ` : ''}
+                        </div>
+                        <div class="leaderboard-actions">
+                            ${song.original_link ? `
+                                <a href="${song.original_link}" target="_blank" class="original-link-btn" style="padding: 6px 10px; font-size: 11px;">
+                                    <i class="ri-external-link-line"></i>
+                                    <span>Link</span>
+                                </a>
+                            ` : ''}
+                            <button class="listen-btn" data-action="listen" data-song-id="${song.id}" style="padding: 6px 10px; font-size: 11px;">
+                                <i class="ri-play-fill"></i>
+                                <span>Play</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        /**
+         * Creates a user leaderboard card for top contributors
+         */
+        function createUserLeaderboardCard(user, index) {
+            const card = document.createElement('div');
+            card.className = 'leaderboard-user-card';
+
+            // Check if user is admin
+            const userAdminStatus = checkAdminStatus(user.username, user.username);
+            const adminBadge = userAdminStatus.isAdmin
+                ? (userAdminStatus.isSuperAdmin
+                    ? '<span class="admin-badge">ADMIN</span>'
+                    : '<span class="sub-admin-badge">MOD</span>')
+                : '';
+
+            card.innerHTML = `
+                <div class="leaderboard-rank">${index + 1}</div>
+                <div class="leaderboard-user-avatar">
+                    ${user.username.charAt(0).toUpperCase()}
+                </div>
+                <div style="flex: 1;">
+                    <h3 style="font-size: 17px; margin-bottom: 6px;">
+                        @${userAdminStatus.displayName}${adminBadge}
+                    </h3>
+                    <p style="color: var(--text-secondary); font-size: 14px;">
+                        ${user.posts} ${user.posts === 1 ? 'post' : 'posts'}
+                    </p>
+                    <div style="display: flex; gap: 12px; margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                        <span><i class="ri-heart-fill" style="color: var(--danger);"></i> ${user.likes_received || 0}</span>
+                        <span><i class="ri-play-fill" style="color: var(--accent);"></i> ${user.listens_received || 0}</span>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        // ========== DATABASE OPERATIONS ==========
+        async function loadSongs(language = 'all', mood = 'all') {
+            try {
+                let query = window.tunedrop.supabase
+                    .from('items')
+                    .select('*');
+
+                if (language !== 'all') {
+                    query = query.eq('language', language);
+                }
+
+                if (mood !== 'all') {
+                    query = query.eq('mood', mood);
+                }
+
+                const { data: items, error } = await query
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                // Filter out songs that are in vault (for home page only)
+                if (window.tunedrop.state.currentTab === 'home') {
+                    return items.filter(song =>
+                        !window.tunedrop.state.vaultSongs.has(song.id.toString())
+                    );
+                }
+
+                return items || [];
+            } catch (error) {
+                console.error('Error loading songs:', error);
+                showToast('Failed to load songs', 'error');
+                return [];
+            }
+        }
+
+        /**
+         * Load top songs by time period - FIXED "Today" filter
+         */
+        async function loadTopSongsByTime(timePeriod = 'day') { // Changed default to 'day'
+            try {
+                let startDate = new Date();
+
+                // FIXED: Proper date calculation for each period
+                switch (timePeriod) {
+                    case 'day':
+                        // Last 24 hours
+                        startDate.setHours(startDate.getHours() - 24);
+                        break;
+                    case 'week':
+                        startDate.setDate(startDate.getDate() - 7);
+                        break;
+                    case 'month':
+                        startDate.setMonth(startDate.getMonth() - 1);
+                        break;
+                    case 'year':
+                        startDate.setFullYear(startDate.getFullYear() - 1);
+                        break;
+                    case 'lifetime':
+                        startDate = null;
+                        break;
+                }
+
+                if (timePeriod === 'lifetime') {
+                    // For lifetime, use the existing items table likes
+                    const { data: items, error } = await window.tunedrop.supabase
+                        .from('items')
+                        .select('*')
+                        .order('likes', { ascending: false })
+                        .limit(20);
+
+                    if (error) throw error;
+                    return items || [];
+                } else {
+                    // For time periods, query song_likes and join with items
+                    const { data, error } = await window.tunedrop.supabase
+                        .from('song_likes')
+                        .select(`
+                            song_id,
+                            items (*)
+                        `)
+                        .gte('created_at', startDate.toISOString())
+                        .order('created_at', { ascending: false });
+
+                    if (error) throw error;
+
+                    // Count likes per song
+                    const likeCounts = {};
+                    data.forEach(like => {
+                        if (like.items) {
+                            if (!likeCounts[like.song_id]) {
+                                likeCounts[like.song_id] = {
+                                    song: like.items,
+                                    count: 0
+                                };
+                            }
+                            likeCounts[like.song_id].count++;
+                        }
+                    });
+
+                    // Convert to array and sort by like count
+                    const songsArray = Object.values(likeCounts)
+                        .sort((a, b) => b.count - a.count)
+                        .slice(0, 20)
+                        .map(item => ({
+                            ...item.song,
+                            recent_likes: item.count
+                        }));
+
+                    return songsArray;
+                }
+            } catch (error) {
+                console.error('Error loading top songs by time:', error);
+                return [];
+            }
+        }
+
+        /**
+ * Load top contributors (users) - FIXED TIME FILTER
+ */
+        async function loadTopContributors(timePeriod = 'day') {
+            try {
+                let startDate = new Date();
+
+                switch (timePeriod) {
+                    case 'day':
+                        startDate.setHours(startDate.getHours() - 24);
+                        break;
+                    case 'week':
+                        startDate.setDate(startDate.getDate() - 7);
+                        break;
+                    case 'month':
+                        startDate.setMonth(startDate.getMonth() - 1);
+                        break;
+                    case 'year':
+                        startDate.setFullYear(startDate.getFullYear() - 1);
+                        break;
+                    case 'lifetime':
+                        startDate = null;
+                        break;
+                }
+
+                if (timePeriod === 'lifetime') {
+                    // For lifetime: use existing logic with items table
+                    const { data: items, error } = await window.tunedrop.supabase
+                        .from('items')
+                        .select('poster_username, likes, listens');
+
+                    if (error) throw error;
+
+                    // Aggregate user data
+                    const userStats = {};
+
+                    items.forEach(item => {
+                        const username = item.poster_username;
+                        if (!username) return;
+
+                        if (!userStats[username]) {
+                            userStats[username] = {
+                                posts: 0,
+                                likes_received: 0,
+                                listens_received: 0
+                            };
+                        }
+
+                        userStats[username].posts += 1;
+                        userStats[username].likes_received += (item.likes || 0);
+                        userStats[username].listens_received += (item.listens || 0);
+                    });
+
+                    // Convert to array and sort by posts
+                    const contributors = Object.entries(userStats)
+                        .map(([username, stats]) => ({ username, ...stats }))
+                        .sort((a, b) => b.posts - a.posts)
+                        .slice(0, 20);
+
+                    return contributors;
+                } else {
+                    // For time periods: Need to query multiple tables
+
+                    // 1. Get posts in time period
+                    const { data: items, error: itemsError } = await window.tunedrop.supabase
+                        .from('items')
+                        .select('id, poster_username, created_at')
+                        .gte('created_at', startDate.toISOString());
+
+                    if (itemsError) throw itemsError;
+
+                    // 2. Get likes in time period from song_likes table
+                    const { data: likes, error: likesError } = await window.tunedrop.supabase
+                        .from('song_likes')
+                        .select('song_id, username, created_at')
+                        .gte('created_at', startDate.toISOString());
+
+                    if (likesError) throw likesError;
+
+                    // 3. Get listens (we need to track these separately - currently not in DB)
+                    // For now, we'll use items.listens which is lifetime
+
+                    // Aggregate user data
+                    const userStats = {};
+
+                    // Count posts per user
+                    items.forEach(item => {
+                        const username = item.poster_username;
+                        if (!username) return;
+
+                        if (!userStats[username]) {
+                            userStats[username] = {
+                                posts: 0,
+                                likes_received: 0,
+                                listens_received: 0
+                            };
+                        }
+
+                        userStats[username].posts += 1;
+                    });
+
+                    // Count likes per user (based on their posts being liked)
+                    // Create a map of song_id to poster_username
+                    const songToUser = {};
+                    items.forEach(item => {
+                        songToUser[item.id] = item.poster_username;
+                    });
+
+                    likes.forEach(like => {
+                        const posterUsername = songToUser[like.song_id];
+                        if (posterUsername && userStats[posterUsername]) {
+                            userStats[posterUsername].likes_received += 1;
+                        }
+                    });
+
+                    // Convert to array and sort by likes received
+                    const contributors = Object.entries(userStats)
+                        .map(([username, stats]) => ({ username, ...stats }))
+                        .sort((a, b) => b.likes_received - a.likes_received) // Sort by likes, not posts
+                        .slice(0, 20);
+
+                    return contributors;
+                }
+            } catch (error) {
+                console.error('Error loading top contributors:', error);
+                return [];
+            }
+        }
+
+        async function loadVaultSections() {
+            try {
+                const vaultIds = Array.from(window.tunedrop.state.vaultSongs);
+                if (vaultIds.length === 0) return { favs: [], listened: [] };
+
+                const { data: items, error } = await window.tunedrop.supabase
+                    .from('items')
+                    .select('*')
+                    .in('id', vaultIds);
+
+                if (error) throw error;
+
+                // Separate into favs (liked) and listened (not liked but in vault)
+                const favs = [];
+                const listened = [];
+
+                items.forEach(song => {
+                    if (window.tunedrop.state.likedSongs.has(song.id.toString())) {
+                        favs.push(song);
+                    } else {
+                        listened.push(song);
+                    }
+                });
+
+                // Sort favs by newest first
+                favs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                // Sort listened by newest first
+                listened.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+                return { favs, listened };
+            } catch (error) {
+                console.error('Error loading vault:', error);
+                return { favs: [], listened: [] };
+            }
+        }
+
+        async function updateSongInDatabase(songId, updates) {
+            try {
+                const { error } = await window.tunedrop.supabase
+                    .from('items')
+                    .update(updates)
+                    .eq('id', songId);
+
+                if (error) throw error;
+                return true;
+            } catch (error) {
+                console.error('Error updating song in database:', error);
+                return false;
+            }
+        }
+
+        /**
+         * Delete song from database (admin only)
+         */
+        async function deleteSongFromDatabase(songId) {
+            try {
+                // First, delete related likes/dislikes
+                await window.tunedrop.supabase
+                    .from('song_likes')
+                    .delete()
+                    .eq('song_id', songId);
+
+                await window.tunedrop.supabase
+                    .from('song_dislikes')
+                    .delete()
+                    .eq('song_id', songId);
+
+                // Then delete the song
+                const { error } = await window.tunedrop.supabase
+                    .from('items')
+                    .delete()
+                    .eq('id', songId);
+
+                if (error) throw error;
+
+                // Remove from local state
+                window.tunedrop.state.vaultSongs.delete(songId.toString());
+                window.tunedrop.state.likedSongs.delete(songId.toString());
+                window.tunedrop.state.dislikedSongs.delete(songId.toString());
+
+                return true;
+            } catch (error) {
+                console.error('Error deleting song:', error);
+                return false;
+            }
+        }
+
+        async function saveUserProfileToDatabase() {
+            if (!window.tunedrop.state.dbUsername) return;
+
+            try {
+                const userData = {
+                    username: window.tunedrop.state.dbUsername,
+                    display_name: window.tunedrop.state.username,
+                    liked_songs: Array.from(window.tunedrop.state.likedSongs),
+                    disliked_songs: Array.from(window.tunedrop.state.dislikedSongs),
+                    vault_songs: Array.from(window.tunedrop.state.vaultSongs),
+                    badges: Array.from(window.tunedrop.state.badges),
+                    stats: window.tunedrop.state.userStats,
+                    last_login: new Date().toISOString(),
+                    settings: {
+                        cardLayout: window.tunedrop.state.cardLayout,
+                        musicService: window.tunedrop.state.musicService
+                    }
+                };
+
+                const { error } = await window.tunedrop.supabase
+                    .from('user_profiles')
+                    .upsert(userData, { onConflict: 'username' });
+
+                if (error) throw error;
+                return true;
+            } catch (error) {
+                console.error('Error saving user profile:', error);
+                return false;
+            }
+        }
+
+        async function loadUserProfileFromDatabase(dbUsername) {
+            try {
+                const { data, error } = await window.tunedrop.supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('username', dbUsername)
+                    .single();
+
+                if (error) {
+                    if (error.code === 'PGRST116') {
+                        return null;
+                    }
+                    throw error;
+                }
+
+                return data;
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+                return null;
+            }
+        }
+
+        async function checkUsernameAvailability(username) {
+            try {
+                // Block usernames starting with "admin" for non-admin users
+                if (username.toLowerCase().startsWith('admin')) {
+                    // Check if it's one of the allowed admin usernames
+                    const allowedAdmins = [
+                        ADMIN_CONFIG.superAdmin.displayName,
+                        ...ADMIN_CONFIG.subAdmins.map(admin => admin.displayName)
+                    ];
+
+                    if (!allowedAdmins.includes(username.toLowerCase())) {
+                        return {
+                            available: false,
+                            error: 'Usernames starting with "admin" are reserved'
+                        };
+                    }
+                }
+
+                const { data, error } = await window.tunedrop.supabase
+                    .from('user_profiles')
+                    .select('username')
+                    .eq('username', username)
+                    .single();
+
+                return {
+                    available: error?.code === 'PGRST116',
+                    exists: !!data
+                };
+            } catch (error) {
+                console.error('Error checking username:', error);
+                return { available: false, error: error.message };
+            }
+        }
+
+        // ========== EVENT HANDLERS ==========
+        /**
+         * Handle like action - FIXED
+         */
+        async function handleLike(songId, songPoster) {
+            const likeBtn = document.querySelector(`[data-song-id="${songId}"][data-action="like"]`);
+            if (likeBtn.disabled) return;
+
+            likeBtn.disabled = true;
+
+            try {
+                const isLiked = window.tunedrop.state.likedSongs.has(songId.toString());
+
+                if (isLiked) {
+                    // Unlike
+                    const { error: deleteError } = await window.tunedrop.supabase
+                        .from('song_likes')
+                        .delete()
+                        .eq('song_id', songId)
+                        .eq('username', window.tunedrop.state.dbUsername);
+
+                    if (deleteError) throw deleteError;
+
+                    // Update count in items table
+                    const { data: song } = await window.tunedrop.supabase
+                        .from('items')
+                        .select('likes')
+                        .eq('id', songId)
+                        .single();
+
+                    const updates = {
+                        likes: Math.max(0, (song.likes || 0) - 1)
+                    };
+
+                    await updateSongInDatabase(songId, updates);
+
+                    window.tunedrop.state.likedSongs.delete(songId.toString());
+                    window.tunedrop.state.userStats.likesGiven = Math.max(0, (window.tunedrop.state.userStats.likesGiven || 0) - 1);
+
+                } else {
+                    // Like
+                    const { error: insertError } = await window.tunedrop.supabase
+                        .from('song_likes')
+                        .insert([{ song_id: songId, username: window.tunedrop.state.dbUsername }]);
+
+                    if (insertError && insertError.code !== '23505') throw insertError;
+
+                    // Update count in items table
+                    const { data: song } = await window.tunedrop.supabase
+                        .from('items')
+                        .select('likes')
+                        .eq('id', songId)
+                        .single();
+
+                    const updates = {
+                        likes: (song.likes || 0) + 1
+                    };
+
+                    await updateSongInDatabase(songId, updates);
+
+                    window.tunedrop.state.likedSongs.add(songId.toString());
+                    window.tunedrop.state.userStats.likesGiven = (window.tunedrop.state.userStats.likesGiven || 0) + 1;
+
+                    // Add to vault if not already
+                    if (!window.tunedrop.state.vaultSongs.has(songId.toString())) {
+                        window.tunedrop.state.vaultSongs.add(songId.toString());
+                    }
+
+                    // If user disliked this song before, remove dislike
+                    if (window.tunedrop.state.dislikedSongs.has(songId.toString())) {
+                        await handleDislike(songId, songPoster, true); // Force remove dislike
+                    }
+
+                    // Show notification if someone else's song
+                    if (songPoster !== window.tunedrop.state.dbUsername) {
+                        // In a real app, you would send a notification to the poster
+                        console.log(`User ${window.tunedrop.state.username} liked ${songPoster}'s song`);
+                    }
+                }
+
+                // Update UI immediately
+                const currentCount = parseInt(likeBtn.querySelector('.like-count').textContent) || 0;
+                const newCount = isLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
+
+                likeBtn.classList.toggle('liked', !isLiked);
+                likeBtn.querySelector('i').className = !isLiked ? 'ri-heart-fill' : 'ri-heart-line';
+                likeBtn.querySelector('.like-count').textContent = newCount;
+
+                await saveUserProfileToDatabase();
+                saveToLocalStorage();
+
+                // Update stats display
+                updateStatsDisplay();
+
+            } catch (error) {
+                console.error('Error handling like:', error);
+                showToast('Failed to update like', 'error');
+            } finally {
+                likeBtn.disabled = false;
+            }
+        }
+
+        /**
+         * Handle dislike action - NEW IMPLEMENTATION
+         */
+        async function handleDislike(songId, songPoster, forceRemove = false) {
+            const dislikeBtn = document.querySelector(`[data-song-id="${songId}"][data-action="dislike"]`);
+            if (dislikeBtn.disabled) return;
+
+            dislikeBtn.disabled = true;
+
+            try {
+                const isDisliked = window.tunedrop.state.dislikedSongs.has(songId.toString());
+
+                if (isDisliked || forceRemove) {
+                    // Remove dislike
+                    const { error: deleteError } = await window.tunedrop.supabase
+                        .from('song_dislikes')
+                        .delete()
+                        .eq('song_id', songId)
+                        .eq('username', window.tunedrop.state.dbUsername);
+
+                    if (deleteError) throw deleteError;
+
+                    // Update count in items table
+                    const { data: song } = await window.tunedrop.supabase
+                        .from('items')
+                        .select('dislikes')
+                        .eq('id', songId)
+                        .single();
+
+                    const updates = {
+                        dislikes: Math.max(0, (song.dislikes || 0) - 1)
+                    };
+
+                    await updateSongInDatabase(songId, updates);
+
+                    window.tunedrop.state.dislikedSongs.delete(songId.toString());
+                    window.tunedrop.state.userStats.dislikesGiven = Math.max(0, (window.tunedrop.state.userStats.dislikesGiven || 0) - 1);
+
+                } else {
+                    // Dislike
+                    const { error: insertError } = await window.tunedrop.supabase
+                        .from('song_dislikes')
+                        .insert([{ song_id: songId, username: window.tunedrop.state.dbUsername }]);
+
+                    if (insertError && insertError.code !== '23505') throw insertError;
+
+                    // Update count in items table
+                    const { data: song } = await window.tunedrop.supabase
+                        .from('items')
+                        .select('dislikes')
+                        .eq('id', songId)
+                        .single();
+
+                    const updates = {
+                        dislikes: (song.dislikes || 0) + 1
+                    };
+
+                    await updateSongInDatabase(songId, updates);
+
+                    window.tunedrop.state.dislikedSongs.add(songId.toString());
+                    window.tunedrop.state.userStats.dislikesGiven = (window.tunedrop.state.userStats.dislikesGiven || 0) + 1;
+
+                    // If user liked this song before, remove like
+                    if (window.tunedrop.state.likedSongs.has(songId.toString())) {
+                        await handleLike(songId, songPoster); // This will remove the like
+                    }
+                }
+
+                // Update UI immediately
+                const currentCount = parseInt(dislikeBtn.querySelector('.dislike-count').textContent) || 0;
+                const newCount = (isDisliked || forceRemove) ? Math.max(0, currentCount - 1) : currentCount + 1;
+
+                dislikeBtn.classList.toggle('disliked', !isDisliked && !forceRemove);
+                dislikeBtn.querySelector('i').className = (!isDisliked && !forceRemove) ? 'ri-thumb-down-fill' : 'ri-thumb-down-line';
+                dislikeBtn.querySelector('.dislike-count').textContent = newCount;
+
+                await saveUserProfileToDatabase();
+                saveToLocalStorage();
+
+                // Update stats display
+                updateStatsDisplay();
+
+            } catch (error) {
+                console.error('Error handling dislike:', error);
+                showToast('Failed to update dislike', 'error');
+            } finally {
+                dislikeBtn.disabled = false;
+            }
+        }
+
+        /**
+         * Handle delete song (admin only)
+         */
+        async function handleDeleteSong(songId) {
+            if (!window.tunedrop.state.isAdmin) {
+                showToast('Admin privileges required', 'error');
+                return;
+            }
+
+            try {
+                const confirmed = confirm('Are you sure you want to delete this song? This action cannot be undone.');
+                if (!confirmed) return;
+
+                const success = await deleteSongFromDatabase(songId);
+
+                if (success) {
+                    // Remove card from UI
+                    const card = document.querySelector(`[data-song-id="${songId}"]`);
+                    if (card) {
+                        card.style.animation = 'slideOut 0.3s ease forwards';
+                        setTimeout(() => card.remove(), 300);
+                    }
+
+                    showToast('Song deleted successfully', 'success');
+
+                    // Refresh current view
+                    switch (window.tunedrop.state.currentTab) {
+                        case 'home':
+                            await renderHomePage();
+                            break;
+                        case 'vault':
+                            await renderVault();
+                            break;
+                        case 'leaderboard':
+                            await renderLeaderboard();
+                            break;
+                    }
+                } else {
+                    showToast('Failed to delete song', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting song:', error);
+                showToast('Failed to delete song', 'error');
+            }
+        }
+
+        /**
+         * Handle favorite from mini-player
+         */
+        async function handlePlayerFavorite() {
+            if (!window.tunedrop.state.currentPlaying) return;
+
+            const songId = window.tunedrop.state.currentPlaying.id;
+            const isLiked = window.tunedrop.state.likedSongs.has(songId.toString());
+
+            if (!isLiked) {
+                // Find the like button and trigger click
+                const likeBtn = document.querySelector(`[data-song-id="${songId}"][data-action="like"]`);
+                if (likeBtn) {
+                    likeBtn.click();
+
+                    // Update player favorite button
+                    const playerFavoriteBtn = document.getElementById('player-favorite');
+                    playerFavoriteBtn.classList.add('active');
+                    playerFavoriteBtn.innerHTML = '<i class="ri-heart-fill"></i>';
+
+                    showToast('Added to favorites!', 'success');
+                }
+            } else {
+                showToast('Already in favorites', 'info');
+            }
+        }
+
+        // ========== RENDER FUNCTIONS ==========
+        async function renderHomePage() {
+            const grid = document.getElementById('song-grid');
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <div class="loading"></div>
+                    <p>Loading songs...</p>
+                </div>
+            `;
+
+            const songs = await loadSongs(
+                window.tunedrop.state.currentLanguage,
+                window.tunedrop.state.currentMood
+            );
+
+            grid.innerHTML = '';
+
+            if (songs.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="ri-music-2-line"></i>
+                        <p>No songs found</p>
+                        <p>Be the first to drop a track!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            songs.forEach(song => {
+                grid.appendChild(createSongCard(song));
+            });
+        }
+
+        async function renderLeaderboard() {
+            const songsGrid = document.getElementById('songs-leaderboard');
+            const usersGrid = document.getElementById('users-leaderboard');
+
+            if (window.tunedrop.state.currentRankType === 'songs') {
+                songsGrid.style.display = 'flex';
+                usersGrid.style.display = 'none';
+
+                songsGrid.innerHTML = `
+                    <div class="empty-state" style="width: 100%;">
+                        <div class="loading"></div>
+                        <p>Loading leaderboard...</p>
+                    </div>
+                `;
+
+                // Use the new time-based function
+                const songs = await loadTopSongsByTime(window.tunedrop.state.currentTimeFilter);
+
+                songsGrid.innerHTML = '';
+
+                if (!songs || songs.length === 0) {
+                    songsGrid.innerHTML = `
+                        <div class="empty-state" style="width: 100%;">
+                            <i class="ri-trophy-line"></i>
+                            <p>No leaderboard data for this period</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                songs.forEach((song, index) => {
+                    songsGrid.appendChild(createLeaderboardCard(song, index, window.tunedrop.state.currentTimeFilter));
+                });
+            } else {
+                // Top Contributors
+                songsGrid.style.display = 'none';
+                usersGrid.style.display = 'flex';
+
+                usersGrid.innerHTML = `
+                    <div class="empty-state" style="width: 100%;">
+                        <div class="loading"></div>
+                        <p>Loading top contributors...</p>
+                    </div>
+                `;
+
+                const contributors = await loadTopContributors(window.tunedrop.state.currentTimeFilter);
+
+                usersGrid.innerHTML = '';
+
+                if (contributors.length === 0) {
+                    usersGrid.innerHTML = `
+                        <div class="empty-state" style="width: 100%;">
+                            <i class="ri-user-line"></i>
+                            <p>No contributor data for this period</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                contributors.forEach((user, index) => {
+                    usersGrid.appendChild(createUserLeaderboardCard(user, index));
+                });
+            }
+        }
+
+        async function renderVault() {
+            const favGrid = document.getElementById('fav-grid');
+            const listenedGrid = document.getElementById('listened-grid');
+
+            // Show loading state for active tab
+            if (window.tunedrop.state.currentVaultTab === 'favs') {
+                favGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="loading"></div>
+                        <p>Loading favorites...</p>
+                    </div>
+                `;
+            } else {
+                listenedGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="loading"></div>
+                        <p>Loading history...</p>
+                    </div>
+                `;
+            }
+
+            const { favs, listened } = await loadVaultSections();
+
+            // Render favorites
+            favGrid.innerHTML = '';
+            if (favs.length === 0) {
+                favGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="ri-heart-line"></i>
+                        <p>No favorites yet</p>
+                        <p>Like songs to add them here</p>
+                    </div>
+                `;
+            } else {
+                favs.forEach(song => {
+                    favGrid.appendChild(createSongCard(song, true, true));
+                });
+            }
+
+            // Render listened
+            listenedGrid.innerHTML = '';
+            if (listened.length === 0) {
+                listenedGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="ri-history-line"></i>
+                        <p>No listening history yet</p>
+                        <p>Play songs to add them here</p>
+                    </div>
+                `;
+            } else {
+                listened.forEach(song => {
+                    listenedGrid.appendChild(createSongCard(song, true, false));
+                });
+            }
+        }
+
+        function renderBadges() {
+            const grid = document.getElementById('badges-grid');
+            const likedByOthers = window.tunedrop.state.userStats.likedByOthers || 0;
+            const userPosts = window.tunedrop.state.userStats.posts || 0;
+            const listens = window.tunedrop.state.userStats.listens || 0;
+            const vaultSize = window.tunedrop.state.vaultSongs.size || 0;
+
+            const badges = [
+                {
+                    id: 'first_like',
+                    title: 'First Like',
+                    description: 'Get your first like from another user',
+                    icon: 'ri-heart-fill',
+                    condition: () => likedByOthers >= 1,
+                    progress: () => Math.min(likedByOthers, 1),
+                    target: 1
+                },
+                {
+                    id: 'popular_track',
+                    title: 'Popular Track',
+                    description: 'Get 10 likes on a single post',
+                    icon: 'ri-fire-fill',
+                    condition: () => false,
+                    progress: () => 0,
+                    target: 10
+                },
+                {
+                    id: 'top_poster',
+                    title: 'Top Poster',
+                    description: 'Post 20 songs',
+                    icon: 'ri-trophy-fill',
+                    condition: () => userPosts >= 20,
+                    progress: () => Math.min(userPosts, 20),
+                    target: 20
+                },
+                {
+                    id: 'music_maestro',
+                    title: 'Music Maestro',
+                    description: 'Listen to 100 songs',
+                    icon: 'ri-music-fill',
+                    condition: () => listens >= 100,
+                    progress: () => Math.min(listens, 100),
+                    target: 100
+                },
+                {
+                    id: 'vault_collector',
+                    title: 'Vault Collector',
+                    description: 'Save 50 songs to vault',
+                    icon: 'ri-archive-fill',
+                    condition: () => vaultSize >= 50,
+                    progress: () => Math.min(vaultSize, 50),
+                    target: 50
+                },
+                {
+                    id: 'early_adopter',
+                    title: 'Early Adopter',
+                    description: 'Use TuneDrop for 7 days',
+                    icon: 'ri-flashlight-fill',
+                    condition: () => false,
+                    progress: () => 0,
+                    target: 7
+                },
+                {
+                    id: 'social_butterfly',
+                    title: 'Social Butterfly',
+                    description: 'Give 50 likes to others',
+                    icon: 'ri-user-heart-fill',
+                    condition: () => (window.tunedrop.state.userStats.likesGiven || 0) >= 50,
+                    progress: () => Math.min(window.tunedrop.state.userStats.likesGiven || 0, 50),
+                    target: 50
+                },
+                {
+                    id: 'trend_setter',
+                    title: 'Trend Setter',
+                    description: 'Post gets 5 likes in one day',
+                    icon: 'ri-trending-up-fill',
+                    condition: () => false,
+                    progress: () => 0,
+                    target: 5
+                }
+            ];
+
+            // Separate unlocked and locked badges
+            const unlocked = badges.filter(badge => badge.condition());
+            const locked = badges.filter(badge => !badge.condition());
+
+            grid.innerHTML = '';
+
+            // Show unlocked badges first
+            unlocked.forEach(badge => {
+                addBadgeToGrid(badge, true);
+            });
+
+            // Then locked badges
+            locked.forEach(badge => {
+                addBadgeToGrid(badge, false);
+            });
+
+            function addBadgeToGrid(badge, isUnlocked) {
+                const progress = badge.progress();
+                const percentage = Math.min(100, (progress / badge.target) * 100);
+
+                const badgeEl = document.createElement('div');
+                badgeEl.className = `achievement-badge ${isUnlocked ? '' : 'locked'}`;
+                badgeEl.innerHTML = `
+                    <i class="${badge.icon}"></i>
+                    <h3 style="font-size: 14px; margin: 8px 0 4px;">${badge.title}</h3>
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">${badge.description}</p>
+                    ${!isUnlocked ? `
+                        <div class="badge-progress">
+                            <div class="badge-progress-bar" style="width: ${percentage}%"></div>
+                        </div>
+                        <small style="color: var(--text-secondary); font-size: 10px; margin-top: 4px; display: block;">
+                            ${Math.min(progress, badge.target)}/${badge.target}
+                        </small>
+                    ` : ''}
+                `;
+                grid.appendChild(badgeEl);
+            }
+        }
+
+        /**
+         * Update stats display in settings
+         */
+        function updateStatsDisplay() {
+            document.getElementById('stat-posts').textContent = window.tunedrop.state.userStats.posts || 0;
+            document.getElementById('stat-likes').textContent = window.tunedrop.state.userStats.likesGiven || 0;
+            document.getElementById('stat-listens').textContent = window.tunedrop.state.userStats.listens || 0;
+            document.getElementById('stat-badges').textContent = window.tunedrop.state.badges.size || 0;
+        }
+
+        // ========== LOCAL STORAGE MANAGEMENT ==========
+        function saveToLocalStorage() {
+            const userData = {
+                username: window.tunedrop.state.username,
+                dbUsername: window.tunedrop.state.dbUsername,
+                likedSongs: Array.from(window.tunedrop.state.likedSongs),
+                dislikedSongs: Array.from(window.tunedrop.state.dislikedSongs),
+                vaultSongs: Array.from(window.tunedrop.state.vaultSongs),
+                badges: Array.from(window.tunedrop.state.badges),
+                userStats: window.tunedrop.state.userStats,
+                musicService: window.tunedrop.state.musicService,
+                cardLayout: window.tunedrop.state.cardLayout,
+                theme: document.documentElement.classList.contains('light-theme') ? 'light' : 'dark',
+                accentColor: getComputedStyle(document.documentElement)
+                    .getPropertyValue('--accent').trim(),
+                // NEW: Save admin status
+                isAdmin: window.tunedrop.state.isAdmin,
+                isSubAdmin: window.tunedrop.state.isSubAdmin,
+                // NEW: Save refresh time
+                lastRefreshTime: window.tunedrop.state.lastRefreshTime,
+                // NEW: Save daily post info
+                dailyPosts: window.tunedrop.state.dailyPosts,
+                lastPostDate: window.tunedrop.state.lastPostDate
+            };
+
+            localStorage.setItem('tunedrop_user', JSON.stringify(userData));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('tunedrop_user');
+            if (saved) {
+                try {
+                    const userData = JSON.parse(saved);
+
+                    window.tunedrop.state.username = userData.username;
+                    window.tunedrop.state.dbUsername = userData.dbUsername || userData.username; // Fallback for old users
+                    window.tunedrop.state.likedSongs = new Set(userData.likedSongs || []);
+                    window.tunedrop.state.dislikedSongs = new Set(userData.dislikedSongs || []);
+                    window.tunedrop.state.vaultSongs = new Set(userData.vaultSongs || []);
+                    window.tunedrop.state.badges = new Set(userData.badges || []);
+                    window.tunedrop.state.userStats = userData.userStats || window.tunedrop.state.userStats;
+                    window.tunedrop.state.musicService = userData.musicService || window.tunedrop.state.musicService;
+                    window.tunedrop.state.cardLayout = userData.cardLayout || 'double';
+                    window.tunedrop.state.isAdmin = userData.isAdmin || false;
+                    window.tunedrop.state.isSubAdmin = userData.isSubAdmin || false;
+                    window.tunedrop.state.lastRefreshTime = userData.lastRefreshTime || null;
+                    window.tunedrop.state.dailyPosts = userData.dailyPosts || 0;
+                    window.tunedrop.state.lastPostDate = userData.lastPostDate || null;
+
+                    if (userData.theme === 'light') {
+                        document.documentElement.classList.remove('dark-theme');
+                        document.documentElement.classList.add('light-theme');
+                    }
+
+                    if (userData.accentColor) {
+                        document.documentElement.style.setProperty('--accent', userData.accentColor);
+                    }
+
+                    // Check admin status again
+                    if (window.tunedrop.state.dbUsername) {
+                        const adminStatus = checkAdminStatus(
+                            window.tunedrop.state.username,
+                            window.tunedrop.state.dbUsername
+                        );
+                        window.tunedrop.state.isAdmin = adminStatus.isAdmin;
+                        window.tunedrop.state.isSubAdmin = adminStatus.isAdmin && !adminStatus.isSuperAdmin;
+                    }
+
+                    return userData.username;
+                } catch (error) {
+                    console.error('Error loading from localStorage:', error);
+                }
+            }
+            return null;
+        }
+
+        // ========== OFFLINE SUPPORT ==========
+        function checkOnlineStatus() {
+            const offlineIndicator = document.getElementById('offline-indicator');
+
+            if (!navigator.onLine) {
+                offlineIndicator.classList.add('show');
+                showToast('You are offline. Some features may not work.', 'warning');
+                return false;
+            } else {
+                offlineIndicator.classList.remove('show');
+                return true;
+            }
+        }
+
+        // ========== REAL-TIME UPDATES ==========
+        async function checkForNewContent() {
+            try {
+                if (!navigator.onLine) return false;
+
+                // Get the timestamp of the latest song we have
+                const latestTimestamp = window.tunedrop.state.lastRefreshTime || new Date().toISOString();
+
+                // Query for songs newer than our last refresh
+                const { data: newSongs, error } = await window.tunedrop.supabase
+                    .from('items')
+                    .select('created_at')
+                    .gt('created_at', latestTimestamp)
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+
+                if (error) throw error;
+
+                const hasNewContent = newSongs && newSongs.length > 0;
+
+                if (hasNewContent) {
+                    window.tunedrop.state.hasNewContent = true;
+                    const refreshBtn = document.getElementById('refresh-btn');
+                    refreshBtn.classList.add('has-updates');
+                    showToast('New songs available! Click refresh to load.', 'info');
+                }
+
+                return hasNewContent;
+            } catch (error) {
+                console.error('Error checking for new content:', error);
+                return false;
+            }
+        }
+
+        async function refreshContent() {
+            const refreshBtn = document.getElementById('refresh-btn');
+            const originalHTML = refreshBtn.innerHTML;
+
+            refreshBtn.innerHTML = '<div class="loading"></div>';
+            refreshBtn.disabled = true;
+
+            try {
+                // Update refresh time
+                window.tunedrop.state.lastRefreshTime = new Date().toISOString();
+                window.tunedrop.state.hasNewContent = false;
+                refreshBtn.classList.remove('has-updates');
+
+                // Refresh current view
+                switch (window.tunedrop.state.currentTab) {
+                    case 'home':
+                        await renderHomePage();
+                        break;
+                    case 'leaderboard':
+                        await renderLeaderboard();
+                        break;
+                    case 'vault':
+                        await renderVault();
+                        break;
+                }
+
+                showToast('Content refreshed!', 'success');
+                saveToLocalStorage();
+            } catch (error) {
+                console.error('Error refreshing content:', error);
+                showToast('Failed to refresh content', 'error');
+            } finally {
+                refreshBtn.innerHTML = originalHTML;
+                refreshBtn.disabled = false;
+            }
+        }
+
+        // ========== INITIALIZATION ==========
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Initializing TuneDrop...');
+
+            // Check online status
+            checkOnlineStatus();
+            window.addEventListener('online', checkOnlineStatus);
+            window.addEventListener('offline', checkOnlineStatus);
+
+            try {
+                window.tunedrop.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('✅ Supabase client initialized');
+            } catch (e) {
+                console.error('❌ Failed to initialize Supabase:', e);
+                showToast('Failed to connect to database', 'error');
+                return;
+            }
+
+            const savedUsername = loadFromLocalStorage();
+
+            if (!savedUsername) {
+                document.getElementById('welcome-modal').classList.add('show');
+            } else {
+                // Load user profile from database
+                const userProfile = await loadUserProfileFromDatabase(window.tunedrop.state.dbUsername);
+
+                if (userProfile) {
+                    window.tunedrop.state.likedSongs = new Set([
+                        ...Array.from(window.tunedrop.state.likedSongs),
+                        ...(userProfile.liked_songs || [])
+                    ]);
+                    window.tunedrop.state.dislikedSongs = new Set([
+                        ...Array.from(window.tunedrop.state.dislikedSongs),
+                        ...(userProfile.disliked_songs || [])
+                    ]);
+                    window.tunedrop.state.vaultSongs = new Set([
+                        ...Array.from(window.tunedrop.state.vaultSongs),
+                        ...(userProfile.vault_songs || [])
+                    ]);
+                    window.tunedrop.state.badges = new Set(userProfile.badges || []);
+
+                    // Merge stats properly
+                    window.tunedrop.state.userStats = {
+                        posts: 0,
+                        likesGiven: 0,
+                        dislikesGiven: 0,
+                        listens: 0,
+                        likedByOthers: 0,
+                        dislikedByOthers: 0,
+                        ...userProfile.stats
+                    };
+
+                    if (userProfile.settings) {
+                        window.tunedrop.state.cardLayout = userProfile.settings.cardLayout || 'double';
+                        window.tunedrop.state.musicService = userProfile.settings.musicService || 'YouTube Music';
+                    }
+                }
+
+                document.querySelector('.app-container').style.display = 'block';
+                initializeApp();
+
+                // Check for new content periodically
+                setInterval(checkForNewContent, 30000); // Every 30 seconds
+
+                // Initial check
+                setTimeout(checkForNewContent, 5000);
+            }
+
+            // Welcome form submission
+            document.getElementById('welcome-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const usernameInput = document.getElementById('welcome-username');
+                const username = usernameInput.value.trim();
+                const submitBtn = document.getElementById('submit-username');
+                const originalBtnHTML = submitBtn.innerHTML;
+
+                if (!username) {
+                    showToast('Please enter a username', 'error');
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<div class="loading"></div>';
+
+                try {
+                    const { available, error } = await checkUsernameAvailability(username);
+
+                    if (error) {
+                        throw new Error(error || 'Failed to check username');
+                    }
+
+                    if (!available) {
+                        showToast('Username already taken. Please choose another.', 'error');
+                        usernameInput.focus();
+                        return;
+                    }
+
+                    // Set username and dbUsername
+                    window.tunedrop.state.username = username;
+
+                    // Check if this is an admin username
+                    let dbUsername = username;
+                    const adminStatus = checkAdminStatus(username, username);
+
+                    if (adminStatus.isAdmin) {
+                        // For admin users, use their display name as username
+                        window.tunedrop.state.username = adminStatus.displayName;
+                        window.tunedrop.state.dbUsername = username; // Store the actual admin username
+                        window.tunedrop.state.isAdmin = true;
+                        window.tunedrop.state.isSubAdmin = !adminStatus.isSuperAdmin;
+                    } else {
+                        // For regular users, username = dbUsername
+                        window.tunedrop.state.dbUsername = username;
+                    }
+
+                    await saveUserProfileToDatabase();
+                    saveToLocalStorage();
+
+                    document.getElementById('welcome-modal').classList.remove('show');
+                    document.querySelector('.app-container').style.display = 'block';
+
+                    initializeApp();
+
+                    showToast(`Welcome, ${window.tunedrop.state.username}!`, 'success');
+
+                } catch (error) {
+                    console.error('Error setting username:', error);
+                    showToast(error.message || 'Failed to set username', 'error');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHTML;
+                }
+            });
+
+            // Real-time username checking
+            document.getElementById('welcome-username').addEventListener('input', async function () {
+                const username = this.value.trim();
+                const feedback = document.getElementById('username-feedback');
+
+                if (username.length < 3) {
+                    feedback.style.display = 'none';
+                    return;
+                }
+
+                feedback.style.display = 'block';
+                feedback.innerHTML = '<div class="loading"></div>';
+                feedback.className = 'username-check';
+
+                try {
+                    const { available, error } = await checkUsernameAvailability(username);
+
+                    if (available) {
+                        feedback.className = 'username-available';
+                        feedback.textContent = '✓ Username available';
+                    } else {
+                        feedback.className = 'username-taken';
+                        feedback.textContent = error || '✗ Username already taken';
+                    }
+                } catch (error) {
+                    feedback.style.display = 'none';
+                }
+            });
+        });
+
+        function initializeApp() {
+            window.tunedrop.elements = {
+                songGrid: document.getElementById('song-grid'),
+                installPrompt: document.getElementById('install-prompt'),
+                installBtn: document.getElementById('install-btn'),
+                dismissInstall: document.getElementById('dismiss-install'),
+                postModal: document.getElementById('post-modal'),
+                postForm: document.getElementById('post-form'),
+                closePostModal: document.getElementById('close-post-modal'),
+                postFab: document.getElementById('post-fab'),
+                settingsModal: document.getElementById('settings-modal'),
+                settingsBtn: document.getElementById('settings-btn'),
+                closeSettingsModal: document.getElementById('close-settings-modal'),
+                themeToggle: document.getElementById('theme-toggle'),
+                colorOptions: document.getElementById('color-options'),
+                serviceSelect: document.getElementById('service-select'),
+                usernameInput: document.getElementById('username-input'),
+                saveSettings: document.getElementById('save-settings'),
+                cleanVault: document.getElementById('clean-vault'),
+                toast: document.getElementById('toast'),
+                filterSection: document.getElementById('filter-section'),
+                warningModal: document.getElementById('warning-modal'),
+                cancelClean: document.getElementById('cancel-clean'),
+                confirmClean: document.getElementById('confirm-clean'),
+                playerScaffold: document.getElementById('player-scaffold'),
+                playerClose: document.getElementById('player-close'),
+                playerPlay: document.getElementById('player-play'),
+                playerFavorite: document.getElementById('player-favorite'),
+                playerLink: document.getElementById('player-link'),
+                rankTabs: document.getElementById('rank-tabs'),
+                songsLeaderboard: document.getElementById('songs-leaderboard'),
+                usersLeaderboard: document.getElementById('users-leaderboard'),
+                timeFilter: document.getElementById('time-filter'),
+                vaultTabs: document.getElementById('vault-tabs'),
+                favsContent: document.getElementById('favs-content'),
+                listenedContent: document.getElementById('listened-content'),
+                favGrid: document.getElementById('fav-grid'),
+                listenedGrid: document.getElementById('listened-grid'),
+                refreshBtn: document.getElementById('refresh-btn'),
+                postLimitWarning: document.getElementById('post-limit-warning')
+            };
+
+            // Set username in settings
+            if (window.tunedrop.elements.usernameInput) {
+                window.tunedrop.elements.usernameInput.value = window.tunedrop.state.username;
+            }
+
+            // Update stats display
+            updateStatsDisplay();
+
+            // Initialize vault tabs
+            const vaultTabButtons = window.tunedrop.elements.vaultTabs.querySelectorAll('.vault-tab-btn');
+            vaultTabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tab = btn.dataset.vaultTab;
+
+                    // Update active tab
+                    vaultTabButtons.forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    btn.classList.add('active');
+
+                    // Show active content
+                    document.querySelectorAll('.vault-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+
+                    if (tab === 'favs') {
+                        window.tunedrop.elements.favsContent.classList.add('active');
+                    } else {
+                        window.tunedrop.elements.listenedContent.classList.add('active');
+                    }
+
+                    window.tunedrop.state.currentVaultTab = tab;
+                });
+            });
+
+            // Refresh button
+            window.tunedrop.elements.refreshBtn.addEventListener('click', refreshContent);
+
+            // Player Favorite button
+            window.tunedrop.elements.playerFavorite.addEventListener('click', handlePlayerFavorite);
+
+            // Player Scaffold Events
+            window.tunedrop.elements.playerClose.addEventListener('click', hidePlayerScaffold);
+            window.tunedrop.elements.playerPlay.addEventListener('click', () => {
+                if (window.tunedrop.state.currentPlaying?.link) {
+                    window.open(window.tunedrop.state.currentPlaying.link, '_blank');
+                } else if (window.tunedrop.state.currentPlaying) {
+                    const service = window.tunedrop.state.musicService;
+                    const title = window.tunedrop.state.currentPlaying.title;
+                    const artist = window.tunedrop.state.currentPlaying.artist;
+                    let searchUrl = '';
+
+                    switch (service) {
+                        case 'YouTube Music':
+                            searchUrl = `https://music.youtube.com/search?q=${encodeURIComponent(title + ' ' + artist)}`;
+                            break;
+                        case 'Spotify':
+                            searchUrl = `https://open.spotify.com/search/${encodeURIComponent(title + ' ' + artist)}`;
+                            break;
+                        default:
+                            searchUrl = `https://music.youtube.com/search?q=${encodeURIComponent(title + ' ' + artist)}`;
+                    }
+
+                    window.open(searchUrl, '_blank');
+                }
+            });
+
+            // Post Modal Events
+            window.tunedrop.elements.postFab.addEventListener('click', async () => {
+                // Check daily post limit before showing modal
+                const canPost = await checkDailyPostLimit();
+
+                if (!canPost) {
+                    window.tunedrop.elements.postLimitWarning.style.display = 'block';
+                } else {
+                    window.tunedrop.elements.postLimitWarning.style.display = 'none';
+                }
+
+                window.tunedrop.elements.postModal.classList.add('show');
+            });
+
+            window.tunedrop.elements.closePostModal.addEventListener('click', () => {
+                window.tunedrop.elements.postModal.classList.remove('show');
+            });
+
+            window.tunedrop.elements.postModal.addEventListener('click', (e) => {
+                if (e.target === window.tunedrop.elements.postModal) {
+                    window.tunedrop.elements.postModal.classList.remove('show');
+                }
+            });
+
+            // Playlist toggle with link requirement
+            document.getElementById('is-playlist').addEventListener('change', function () {
+                const linkInput = document.getElementById('original-link');
+                const linkRequired = document.getElementById('link-required');
+
+                if (this.checked) {
+                    linkInput.required = true;
+                    linkRequired.style.display = 'block';
+                } else {
+                    linkInput.required = false;
+                    linkRequired.style.display = 'none';
+                }
+            });
+
+            // Mood selector with improved icons
+            document.querySelectorAll('.mood-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    document.querySelectorAll('.mood-option').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                    option.classList.add('active');
+                    document.getElementById('selected-mood').value = option.dataset.mood;
+                });
+            });
+
+            // Replace the ENTIRE post form event listener with this:
+
+            window.tunedrop.elements.postForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                console.log('Post form submission started');
+
+                const submitBtn = document.getElementById('submit-post');
+                const originalBtnHTML = submitBtn.innerHTML;
+
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<div class="loading"></div>';
+
+                try {
+                    // 1. Check daily post limit
+                    const canPost = await checkDailyPostLimit();
+                    if (!canPost) {
+                        showToast(`Daily limit reached (${ADMIN_CONFIG.dailyPostLimit} posts/day)`, 'warning');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnHTML;
+                        return;
+                    }
+
+                    // 2. Get form values
+                    const title = document.getElementById('song-title').value.trim();
+                    const artist = document.getElementById('song-artist').value.trim();
+                    const language = document.getElementById('song-language').value;
+                    const mood = document.getElementById('selected-mood').value;
+                    const originalLink = document.getElementById('original-link').value.trim();
+                    const isPlaylist = document.getElementById('is-playlist').checked;
+
+                    console.log('Form values:', { title, artist, language, mood, originalLink, isPlaylist });
+
+                    // 3. Basic validation
+                    if (!title || title.length < 3) {
+                        throw new Error('Title must be at least 3 characters');
+                    }
+
+                    if (!language) {
+                        throw new Error('Please select a language');
+                    }
+
+                    if (!mood) {
+                        throw new Error('Please select a mood');
+                    }
+
+                    if (isPlaylist && !originalLink) {
+                        throw new Error('Link is required for playlists');
+                    }
+
+                    if (originalLink && !originalLink.startsWith('http')) {
+                        throw new Error('Please enter a valid URL (must start with http:// or https://)');
+                    }
+
+                    // 4. Create song object
+                    const newSong = {
+                        title: title,
+                        artist: artist || 'Unknown Artist',
+                        language: language,
+                        mood: mood,
+                        type: isPlaylist ? 'playlist' : 'song',
+                        poster_username: window.tunedrop.state.dbUsername,
+                        poster_display_name: window.tunedrop.state.username,
+                        likes: 0,
+                        dislikes: 0,
+                        listens: 0,
+                        original_link: originalLink || null
+                    };
+
+                    console.log('Submitting song:', newSong);
+
+                    // 5. Submit to database
+                    const { data, error } = await window.tunedrop.supabase
+                        .from('items')
+                        .insert([newSong])
+                        .select(); // Add .select() to get response
+
+                    if (error) {
+                        console.error('Database error:', error);
+                        throw new Error(`Database error: ${error.message}`);
+                    }
+
+                    console.log('Database response:', data);
+
+                    // 6. Update user stats
+                    window.tunedrop.state.userStats.posts = (window.tunedrop.state.userStats.posts || 0) + 1;
+                    window.tunedrop.state.dailyPosts += 1;
+                    window.tunedrop.state.lastPostDate = new Date().toISOString().split('T')[0];
+
+                    // 7. Save user profile
+                    await saveUserProfileToDatabase();
+                    saveToLocalStorage();
+
+                    // 8. Update stats display
+                    updateStatsDisplay();
+
+                    // 9. Show success message
+                    showToast('Track dropped successfully!', 'success');
+
+                    // 10. Close modal and reset form
+                    window.tunedrop.elements.postModal.classList.remove('show');
+                    window.tunedrop.elements.postForm.reset();
+
+                    // Reset mood selection
+                    document.querySelectorAll('.mood-option').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                    document.getElementById('selected-mood').value = '';
+
+                    // Reset playlist toggle
+                    document.getElementById('is-playlist').checked = false;
+
+                    // 11. Refresh home page
+                    await renderHomePage();
+
+                } catch (error) {
+                    console.error('Error posting song:', error);
+                    showToast(error.message || 'Failed to post song', 'error');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHTML;
+                }
+            });
+
+            // Settings Modal
+            window.tunedrop.elements.settingsBtn.addEventListener('click', () => {
+                window.tunedrop.elements.settingsModal.classList.add('show');
+            });
+
+            window.tunedrop.elements.closeSettingsModal.addEventListener('click', () => {
+                window.tunedrop.elements.settingsModal.classList.remove('show');
+            });
+
+            window.tunedrop.elements.settingsModal.addEventListener('click', (e) => {
+                if (e.target === window.tunedrop.elements.settingsModal) {
+                    window.tunedrop.elements.settingsModal.classList.remove('show');
+                }
+            });
+
+            // Theme toggle
+            const themeToggle = document.getElementById('theme-toggle');
+            if (themeToggle) {
+                themeToggle.checked = !document.documentElement.classList.contains('light-theme');
+                themeToggle.addEventListener('change', function () {
+                    if (this.checked) {
+                        document.documentElement.classList.remove('light-theme');
+                        document.documentElement.classList.add('dark-theme');
+                    } else {
+                        document.documentElement.classList.remove('dark-theme');
+                        document.documentElement.classList.add('light-theme');
+                    }
+                    saveToLocalStorage();
+                });
+            }
+
+            // Color options
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    const color = option.dataset.color;
+                    document.documentElement.style.setProperty('--accent', color);
+
+                    const hoverColor = adjustColor(color, -20);
+                    document.documentElement.style.setProperty('--accent-hover', hoverColor);
+
+                    document.querySelectorAll('.color-option').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                    option.classList.add('active');
+
+                    saveToLocalStorage();
+                });
+            });
+
+            function adjustColor(color, amount) {
+                let usePound = false;
+                if (color[0] === "#") {
+                    color = color.slice(1);
+                    usePound = true;
+                }
+
+                const num = parseInt(color, 16);
+                let r = (num >> 16) + amount;
+                let g = ((num >> 8) & 0x00FF) + amount;
+                let b = (num & 0x0000FF) + amount;
+
+                r = Math.min(Math.max(0, r), 255);
+                g = Math.min(Math.max(0, g), 255);
+                b = Math.min(Math.max(0, b), 255);
+
+                return (usePound ? "#" : "") + (b | (g << 8) | (r << 16)).toString(16).padStart(6, '0');
+            }
+
+            // Layout options
+            document.querySelectorAll('.layout-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    const layout = option.dataset.layout;
+
+                    document.querySelectorAll('.layout-option').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                    option.classList.add('active');
+
+                    window.tunedrop.state.cardLayout = layout;
+                    applyCardLayout();
+                    saveToLocalStorage();
+                });
+            });
+
+            function applyCardLayout() {
+                const songGrid = document.getElementById('song-grid');
+                if (window.tunedrop.state.cardLayout === 'single') {
+                    songGrid.classList.add('single-column');
+                    if (window.innerWidth >= 768) {
+                        songGrid.classList.add('single-column-desktop');
+                        songGrid.classList.remove('double-column-desktop');
+                    }
+                } else {
+                    songGrid.classList.remove('single-column');
+                    if (window.innerWidth >= 768) {
+                        songGrid.classList.add('double-column-desktop');
+                        songGrid.classList.remove('single-column-desktop');
+                    }
+                }
+            }
+
+            // Music service select
+            if (window.tunedrop.elements.serviceSelect) {
+                window.tunedrop.elements.serviceSelect.value = window.tunedrop.state.musicService;
+                window.tunedrop.elements.serviceSelect.addEventListener('change', function () {
+                    window.tunedrop.state.musicService = this.value;
+                    saveToLocalStorage();
+                });
+            }
+
+            // Save settings
+            window.tunedrop.elements.saveSettings.addEventListener('click', async () => {
+                const username = window.tunedrop.elements.usernameInput.value.trim();
+                if (username && username !== window.tunedrop.state.username) {
+                    const { available } = await checkUsernameAvailability(username);
+
+                    if (!available) {
+                        showToast('Username already taken', 'error');
+                        return;
+                    }
+
+                    // Don't allow regular users to change to admin usernames
+                    if (username.toLowerCase().startsWith('admin') && !window.tunedrop.state.isAdmin) {
+                        showToast('Usernames starting with "admin" are reserved', 'error');
+                        return;
+                    }
+
+                    window.tunedrop.state.username = username;
+                    // For regular users, also update dbUsername
+                    if (!window.tunedrop.state.isAdmin) {
+                        window.tunedrop.state.dbUsername = username;
+                    }
+
+                    await saveUserProfileToDatabase();
+                    saveToLocalStorage();
+                    showToast('Username updated!', 'success');
+                } else {
+                    showToast('Settings saved!', 'success');
+                }
+                window.tunedrop.elements.settingsModal.classList.remove('show');
+            });
+
+            // Clean vault with warning
+            window.tunedrop.elements.cleanVault.addEventListener('click', () => {
+                // Close settings modal first
+                window.tunedrop.elements.settingsModal.classList.remove('show');
+                // Then show warning modal
+                setTimeout(() => {
+                    window.tunedrop.elements.warningModal.classList.add('show');
+                }, 300);
+            });
+
+            window.tunedrop.elements.cancelClean.addEventListener('click', () => {
+                window.tunedrop.elements.warningModal.classList.remove('show');
+            });
+
+            window.tunedrop.elements.confirmClean.addEventListener('click', async () => {
+                window.tunedrop.state.vaultSongs.clear();
+                window.tunedrop.state.likedSongs.clear();
+                window.tunedrop.state.dislikedSongs.clear();
+                await saveUserProfileToDatabase();
+                saveToLocalStorage();
+
+                if (window.tunedrop.state.currentTab === 'vault') {
+                    renderVault();
+                } else if (window.tunedrop.state.currentTab === 'home') {
+                    renderHomePage();
+                }
+
+                window.tunedrop.elements.warningModal.classList.remove('show');
+                showToast('Vault cleaned!', 'success');
+            });
+
+            // Filter chips
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-chip').forEach(c => {
+                        c.classList.remove('active');
+                    });
+                    chip.classList.add('active');
+                    window.tunedrop.state.currentLanguage = chip.dataset.lang;
+                    renderHomePage();
+                });
+            });
+
+            document.querySelectorAll('.mood-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    document.querySelectorAll('.mood-chip').forEach(c => {
+                        c.classList.remove('active');
+                    });
+                    chip.classList.add('active');
+                    window.tunedrop.state.currentMood = chip.dataset.mood;
+                    renderHomePage();
+                });
+            });
+
+            // Time filter for rank page - FIXED SCROLLABLE
+            window.tunedrop.elements.timeFilter.addEventListener('click', (e) => {
+                if (e.target.classList.contains('time-filter-btn')) {
+                    document.querySelectorAll('.time-filter-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    e.target.classList.add('active');
+                    window.tunedrop.state.currentTimeFilter = e.target.dataset.period;
+                    renderLeaderboard();
+                }
+            });
+
+            // Rank tabs
+            window.tunedrop.elements.rankTabs.addEventListener('click', (e) => {
+                if (e.target.classList.contains('rank-tab-btn')) {
+                    document.querySelectorAll('.rank-tab-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    e.target.classList.add('active');
+                    window.tunedrop.state.currentRankType = e.target.dataset.rankType;
+                    renderLeaderboard();
+                }
+            });
+
+            // Navigation tabs - FIXED CLICK ISSUE
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => {
+                // Remove existing listeners
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+            });
+
+            // Re-select buttons after cloning
+            const updatedNavButtons = document.querySelectorAll('.nav-btn');
+            updatedNavButtons.forEach(btn => {
+                btn.addEventListener('click', handleNavClick);
+            });
+
+            function handleNavClick(e) {
+                const tab = e.currentTarget.dataset.tab;
+
+                // Update active tab
+                updatedNavButtons.forEach(b => {
+                    b.classList.remove('active');
+                });
+                e.currentTarget.classList.add('active');
+
+                // Show/hide filter section
+                if (window.tunedrop.elements.filterSection) {
+                    if (tab === 'home') {
+                        window.tunedrop.elements.filterSection.classList.remove('hidden');
+                    } else {
+                        window.tunedrop.elements.filterSection.classList.add('hidden');
+                    }
+                }
+
+                // Show active page
+                document.querySelectorAll('.tab-page').forEach(page => {
+                    page.classList.remove('active');
+                });
+                document.getElementById(`${tab}-page`).classList.add('active');
+
+                window.tunedrop.state.currentTab = tab;
+
+                // Load content for tab
+                switch (tab) {
+                    case 'home':
+                        renderHomePage();
+                        break;
+                    case 'leaderboard':
+                        renderLeaderboard();
+                        break;
+                    case 'vault':
+                        renderVault();
+                        break;
+                    case 'achievements':
+                        renderBadges();
+                        break;
+                }
+            }
+
+            // Song grid event delegation - INCLUDES DELETE HANDLING
+            document.addEventListener('click', async (e) => {
+                const actionBtn = e.target.closest('[data-action]');
+                if (!actionBtn) return;
+
+                const songId = actionBtn.dataset.songId;
+                const action = actionBtn.dataset.action;
+                const card = document.querySelector(`[data-song-id="${songId}"]`);
+                const originalLink = card?.dataset.link;
+                const songPoster = card?.dataset.poster;
+
+                switch (action) {
+                    case 'like':
+                        await handleLike(songId, songPoster);
+                        break;
+                    case 'dislike':
+                        await handleDislike(songId, songPoster);
+                        break;
+                    case 'delete':
+                        await handleDeleteSong(songId);
+                        break;
+                    case 'listen':
+                        handleListen(songId, originalLink, songPoster);
+                        break;
+                    case 'original-link':
+                        // Already handled by anchor tag
+                        break;
+                }
+            });
+
+            // PWA Installation
+            let deferredPrompt;
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                window.tunedrop.elements.installPrompt.style.display = 'flex';
+            });
+
+            window.tunedrop.elements.installBtn.addEventListener('click', async () => {
+                if (!deferredPrompt) return;
+
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+
+                if (outcome === 'accepted') {
+                    showToast('TuneDrop installed successfully!', 'success');
+                }
+
+                window.tunedrop.elements.installPrompt.style.display = 'none';
+                deferredPrompt = null;
+            });
+
+            window.tunedrop.elements.dismissInstall.addEventListener('click', () => {
+                window.tunedrop.elements.installPrompt.style.display = 'none';
+            });
+
+            // Ad click handlers
+            document.querySelectorAll('.ad-container').forEach(ad => {
+                ad.addEventListener('click', () => {
+                    showToast('Upgrade to Premium to remove ads', 'info');
+                });
+            });
+
+            // Initial render
+            renderHomePage();
+            renderBadges();
+
+            console.log('✅ TuneDrop fully initialized!');
+            showToast(`Welcome back, ${window.tunedrop.state.username}!`, 'info');
+        }
+
+        function handleListen(songId, originalLink, songPoster) {
+            window.tunedrop.state.userStats.listens = (window.tunedrop.state.userStats.listens || 0) + 1;
+
+            if (!window.tunedrop.state.vaultSongs.has(songId.toString())) {
+                window.tunedrop.state.vaultSongs.add(songId.toString());
+                showToast('Added to vault!', 'success');
+                createConfetti();
+            }
+
+            updateSongInDatabase(songId, {
+                listens: (window.tunedrop.state.userStats.listens || 0) + 1
+            });
+
+            const card = document.querySelector(`[data-song-id="${songId}"]`);
+            if (card) {
+                const title = card.dataset.title;
+                const artist = card.dataset.artist;
+                const link = card.dataset.link;
+
+                window.tunedrop.state.currentPlaying = {
+                    id: songId,
+                    title: title,
+                    artist: artist,
+                    link: link
+                };
+
+                showPlayerScaffold(title, artist, link);
+
+                // Update player favorite button based on liked status
+                const isLiked = window.tunedrop.state.likedSongs.has(songId.toString());
+                const playerFavoriteBtn = document.getElementById('player-favorite');
+                if (isLiked) {
+                    playerFavoriteBtn.classList.add('active');
+                    playerFavoriteBtn.innerHTML = '<i class="ri-heart-fill"></i>';
+                } else {
+                    playerFavoriteBtn.classList.remove('active');
+                    playerFavoriteBtn.innerHTML = '<i class="ri-heart-line"></i>';
+                }
+
+                if (originalLink) {
+                    window.open(originalLink, '_blank');
+                } else {
+                    const service = window.tunedrop.state.musicService;
+                    let searchUrl = '';
+
+                    switch (service) {
+                        case 'YouTube Music':
+                            searchUrl = `https://music.youtube.com/search?q=${encodeURIComponent(title + ' ' + artist)}`;
+                            break;
+                        case 'Spotify':
+                            searchUrl = `https://open.spotify.com/search/${encodeURIComponent(title + ' ' + artist)}`;
+                            break;
+                        default:
+                            searchUrl = `https://music.youtube.com/search?q=${encodeURIComponent(title + ' ' + artist)}`;
+                    }
+
+                    window.open(searchUrl, '_blank');
+                }
+            }
+
+            saveUserProfileToDatabase();
+            saveToLocalStorage();
+
+            if (window.tunedrop.state.currentTab === 'home') {
+                const songCard = document.querySelector(`[data-song-id="${songId}"]`);
+                if (songCard) {
+                    songCard.style.animation = 'slideOut 0.3s ease forwards';
+                    setTimeout(() => {
+                        songCard.remove();
+                        if (window.tunedrop.state.currentTab === 'vault') {
+                            renderVault();
+                        }
+                    }, 300);
+                }
+            }
+        }
+
+        function showPlayerScaffold(title, artist, link) {
+            const player = document.getElementById('player-scaffold');
+            const playerTitle = document.getElementById('player-title');
+            const playerArtist = document.getElementById('player-artist');
+            const playerLink = document.getElementById('player-link');
+
+            playerTitle.textContent = title || 'Unknown Title';
+            playerArtist.textContent = artist || 'Unknown Artist';
+
+            if (link) {
+                playerLink.href = link;
+                playerLink.style.display = 'flex';
+            } else {
+                playerLink.style.display = 'none';
+            }
+
+            player.classList.add('show');
+        }
+
+        function hidePlayerScaffold() {
+            const player = document.getElementById('player-scaffold');
+            player.classList.remove('show');
+            window.tunedrop.state.currentPlaying = null;
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 20; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.backgroundColor = getComputedStyle(document.documentElement)
+                    .getPropertyValue('--accent').trim();
+                confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+
+                document.body.appendChild(confetti);
+
+                setTimeout(() => {
+                    confetti.remove();
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+
+</html>
