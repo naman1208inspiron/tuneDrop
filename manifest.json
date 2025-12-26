@@ -11,17 +11,21 @@
     "start_url": "/",
     "icons": [
         {
-            "src": "td.png",
+            "src": "tdwobghigh.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
         },
         {
-            "src": "td.png",
+            "src": "tdwobghigh.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "maskable"
         }
     ]
 
 }
+
+
 
 
