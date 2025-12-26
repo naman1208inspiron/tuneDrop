@@ -7,8 +7,6 @@
     <title>TuneDrop - Music Sharing PWA</title>
     <meta name="description" content="Community-driven music sharing app">
     <meta name="theme-color" content="#121826">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json">
@@ -17,18 +15,29 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="TuneDrop">
+    <link rel="apple-touch-icon" href="/icon-192x192.png">
 
     <!-- Icons -->
-    <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
-    <link rel="apple-touch-icon"
-        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
+    <link rel="icon" href="/icon-192x192.png">
 
     <!-- Icons Library -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js').then(function (registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function (err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
 
     <!-- Styles -->
     <style>
@@ -55,6 +64,10 @@
             --admin-gold: #FFD700;
             --admin-gold-dark: #D4AF37;
 
+            /* Link colors that update with theme */
+            --link-color: #10b981;
+            --link-hover: #0da371;
+
             --border-radius: 20px;
             --border-radius-sm: 12px;
             --border-radius-lg: 28px;
@@ -75,6 +88,59 @@
             --text-secondary: #64748b;
             --accent: #7c3aed;
             --accent-hover: #6d28d9;
+            --link-color: #059669;
+            --link-hover: #047857;
+        }
+
+        /* Player Favorite Button - Enhanced Styles */
+        .player-btn.favorite {
+            background: var(--danger);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .player-btn.favorite.active {
+            background: var(--danger);
+            animation: heartbeat 0.5s;
+        }
+
+        .player-btn.favorite::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .player-btn.favorite:hover::after {
+            opacity: 1;
+        }
+
+        .player-btn.favorite:active {
+            transform: scale(0.95);
+        }
+
+        /* Pulse animation for new likes */
+        @keyframes pulse-like {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        .player-btn.favorite.just-liked {
+            animation: heartbeat 0.5s, pulse-like 1s;
         }
 
         body {
@@ -87,6 +153,81 @@
             padding-bottom: 140px;
         }
 
+        /* Improved Responsive Design for Larger Screens */
+        @media (min-width: 768px) {
+            body {
+                max-width: 1200px;
+                margin: 0 auto;
+                box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+            }
+
+            .app-container {
+                padding: 0 20px;
+            }
+
+            .top-nav {
+                border-radius: 0 0 var(--border-radius) var(--border-radius);
+                margin-top: 10px;
+            }
+
+            .bottom-nav {
+                border-radius: var(--border-radius) var(--border-radius) 0 0;
+                max-width: 800px;
+                margin: 0 auto;
+                left: 50%;
+                transform: translateX(-50%);
+                width: calc(100% - 40px);
+            }
+
+            .song-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 16px;
+            }
+
+            .leaderboard-grid {
+                max-width: 900px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            body {
+                max-width: 1400px;
+            }
+
+            .song-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 20px;
+            }
+
+            .song-grid.double-column-desktop {
+                grid-template-columns: repeat(2, 1fr) !important;
+                max-width: 900px;
+                margin: 0 auto;
+            }
+
+            .song-grid.single-column-desktop {
+                grid-template-columns: 1fr !important;
+                max-width: 700px;
+                margin: 0 auto;
+            }
+
+            .leaderboard-grid {
+                max-width: 1000px;
+            }
+        }
+
+        @media (min-width: 1440px) {
+            .song-grid {
+                grid-template-columns: repeat(4, 1fr) !important;
+            }
+
+            .song-grid.double-column-desktop {
+                grid-template-columns: repeat(2, 1fr) !important;
+                max-width: 1000px;
+            }
+        }
+
+        /* Glass effect */
         .glass {
             background: var(--bg-glass);
             backdrop-filter: blur(20px);
@@ -165,6 +306,226 @@
             }
         }
 
+        /* Link colors that update with theme */
+        .song-link a {
+            color: var(--link-color) !important;
+            text-decoration: none;
+            font-size: 10px;
+            transition: var(--transition);
+        }
+
+        .song-link a:hover {
+            color: var(--link-hover) !important;
+            text-decoration: underline;
+        }
+
+        .original-link-btn {
+            background: var(--link-color) !important;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: var(--border-radius-lg);
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            height: 32px;
+            text-decoration: none;
+        }
+
+        .original-link-btn:hover {
+            background: var(--link-hover) !important;
+            transform: translateY(-2px);
+        }
+
+        .leaderboard-link a {
+            color: var(--link-color) !important;
+            text-decoration: none;
+        }
+
+        .leaderboard-link a:hover {
+            color: var(--link-hover) !important;
+            text-decoration: underline;
+        }
+
+        /* Updated styles for like/dislike in rank tab */
+        .leaderboard-likes {
+            color: var(--danger) !important;
+            /* Heart color updates with theme */
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-btn.liked {
+            color: var(--danger) !important;
+        }
+
+        .action-btn.disliked {
+            color: var(--warning) !important;
+        }
+
+        /* Welcome Modal with Password */
+        .password-input-group {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .password-strength {
+            height: 4px;
+            background: var(--bg-secondary);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--danger);
+            transition: width 0.3s ease;
+        }
+
+        .password-strength-bar.weak {
+            width: 33%;
+            background: var(--danger);
+        }
+
+        .password-strength-bar.medium {
+            width: 66%;
+            background: var(--warning);
+        }
+
+        .password-strength-bar.strong {
+            width: 100%;
+            background: var(--success);
+        }
+
+        /* Settings Page Updates */
+        .settings-section {
+            margin-bottom: 24px;
+        }
+
+        .settings-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .username-display {
+            background: var(--bg-secondary);
+            padding: 12px 16px;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .username-display i {
+            color: var(--accent);
+            margin-right: 8px;
+        }
+
+        .password-display-group {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .password-display {
+            width: 100%;
+            padding: 12px 16px 12px 40px;
+            background: var(--bg-secondary);
+            border: 2px solid transparent;
+            border-radius: var(--border-radius-sm);
+            color: var(--text-primary);
+            font-family: monospace;
+            letter-spacing: 2px;
+        }
+
+        .password-display.hidden {
+            -webkit-text-security: disc;
+            text-security: disc;
+        }
+
+        .password-display-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .password-display-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        /* Badges Page with Stats */
+        .badges-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            margin: 16px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Delete Confirmation Modal */
+        .delete-confirm-modal .modal-content {
+            max-width: 350px;
+            text-align: center;
+        }
+
+        .delete-confirm-icon {
+            font-size: 48px;
+            color: var(--danger);
+            margin-bottom: 16px;
+        }
+
+        /* Rest of your existing CSS remains the same... */
+        /* ... [All your existing CSS remains unchanged below this point] ... */
+
         /* Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
@@ -180,59 +541,9 @@
             border-radius: 3px;
         }
 
-        /* Install Prompt */
+        /* Remove old install prompt styles */
         #install-prompt {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(135deg, var(--accent), #6d28d9);
-            color: white;
-            padding: 12px 16px;
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 9999;
-            box-shadow: var(--shadow);
-        }
-
-        .install-content {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            width: 100%;
-        }
-
-        .install-content p {
-            flex: 1;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .install-buttons {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: var(--border-radius-sm);
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: var(--transition);
-            font-family: inherit;
-        }
-
-        .btn-install {
-            background: white;
-            color: var(--accent);
-        }
-
-        .btn-dismiss {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
+            display: none !important;
         }
 
         /* Top Navigation with Refresh Button */
@@ -328,38 +639,9 @@
             transform: rotate(15deg);
         }
 
-        /* Ad Containers */
+        /* Ad Containers - Commented out */
         .ad-container {
-            padding: 12px;
-            text-align: center;
-            font-size: 12px;
-            color: var(--text-secondary);
-            background: var(--bg-secondary);
-            border-radius: var(--border-radius-sm);
-            margin: 8px 16px;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .ad-container:hover {
-            background: var(--bg-card);
-        }
-
-        .ad-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            opacity: 0.8;
-        }
-
-        .ad-label {
-            background: var(--accent);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 10px;
-            font-weight: 600;
+            display: none;
         }
 
         /* Filter Section */
@@ -421,7 +703,7 @@
             color: var(--text-primary);
         }
 
-        /* Time Filter for Rank Page - SCROLLABLE FIX */
+        /* Time Filter for Rank Page */
         .time-filter {
             display: flex;
             gap: 8px;
@@ -482,35 +764,6 @@
 
         .warning-modal {
             z-index: 2100;
-        }
-
-        @media (min-width: 768px) {
-            .song-grid {
-                grid-template-columns: repeat(2, 1fr);
-                max-width: 800px;
-                margin: 0 auto;
-            }
-
-            .song-grid.double-column-desktop {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .song-grid.single-column-desktop {
-                grid-template-columns: 1fr;
-                max-width: 600px;
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .song-grid {
-                grid-template-columns: repeat(3, 1fr);
-                max-width: 1200px;
-            }
-
-            .song-grid.double-column-desktop {
-                grid-template-columns: repeat(2, 1fr);
-                max-width: 800px;
-            }
         }
 
         /* Song Card */
@@ -592,7 +845,7 @@
             font-weight: 600;
         }
 
-        /* Delete Button for Admin */
+        /* Delete Button for Admin - FIXED */
         .delete-btn {
             background: var(--danger);
             color: white;
@@ -609,8 +862,11 @@
             position: absolute;
             top: 8px;
             right: 8px;
-            opacity: 0;
-            transform: scale(0.8);
+            opacity: 1;
+            /* Changed from 0 to 1 for admin visibility */
+            transform: scale(1);
+            /* Changed from 0.8 to 1 */
+            z-index: 10;
         }
 
         .song-card:hover .delete-btn {
@@ -662,21 +918,11 @@
 
         .song-link {
             font-size: 11px;
-            color: var(--success);
+            color: var(--link-color);
             display: flex;
             align-items: center;
             gap: 4px;
             word-break: break-all;
-        }
-
-        .song-link a {
-            color: var(--success);
-            text-decoration: none;
-            font-size: 10px;
-        }
-
-        .song-link a:hover {
-            text-decoration: underline;
         }
 
         .song-actions {
@@ -744,33 +990,6 @@
         }
 
         .listen-btn i {
-            font-size: 14px;
-        }
-
-        .original-link-btn {
-            background: var(--success);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: var(--border-radius-lg);
-            font-weight: 600;
-            font-size: 12px;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            height: 32px;
-            text-decoration: none;
-        }
-
-        .original-link-btn:hover {
-            background: #0da371;
-            transform: translateY(-2px);
-        }
-
-        .original-link-btn i {
             font-size: 14px;
         }
 
@@ -1156,19 +1375,10 @@
 
         .leaderboard-link {
             font-size: 12px;
-            color: var(--success);
+            color: var(--link-color);
             display: flex;
             align-items: center;
             gap: 4px;
-        }
-
-        .leaderboard-link a {
-            color: var(--success);
-            text-decoration: none;
-        }
-
-        .leaderboard-link a:hover {
-            text-decoration: underline;
         }
 
         .leaderboard-stats {
@@ -1176,15 +1386,6 @@
             justify-content: space-between;
             align-items: center;
             margin-top: 12px;
-        }
-
-        .leaderboard-likes {
-            color: var(--success);
-            font-size: 16px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
 
         .leaderboard-actions {
@@ -1245,7 +1446,7 @@
             color: white;
         }
 
-        /* IMPROVED POST MODAL - Fixed mood icons overlapping */
+        /* IMPROVED POST MODAL */
         .form-group {
             margin-bottom: 16px;
             position: relative;
@@ -1628,7 +1829,7 @@
             display: none;
         }
 
-        /* Settings Page */
+        /* Settings Page - Updated */
         .settings-section {
             margin-bottom: 24px;
         }
@@ -1708,7 +1909,7 @@
             transform: scale(1.1);
         }
 
-        /* FIXED Toast Notifications - Adjusted z-index */
+        /* FIXED Toast Notifications */
         #toast {
             position: fixed;
             bottom: 120px;
@@ -1720,7 +1921,6 @@
             border-radius: var(--border-radius);
             box-shadow: var(--shadow-lg);
             z-index: 90;
-            /* Lower than bottom nav (100) */
             opacity: 0;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
@@ -1904,7 +2104,7 @@
             }
         }
 
-        /* User Stats */
+        /* User Stats - MOVED TO BADGES PAGE */
         .user-stats {
             display: flex;
             justify-content: space-around;
@@ -1929,6 +2129,44 @@
             color: var(--text-secondary);
             margin-top: 4px;
         }
+
+        /* Delete Confirmation Modal */
+        .delete-confirm-modal .modal-content {
+            max-width: 350px;
+            text-align: center;
+        }
+
+        .delete-confirm-icon {
+            font-size: 48px;
+            color: var(--danger);
+            margin-bottom: 16px;
+        }
+
+        .delete-confirm-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .delete-confirm-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .delete-confirm-btn.confirm {
+            background: var(--danger);
+            color: white;
+        }
+
+        .delete-confirm-btn.cancel {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
     </style>
 </head>
 
@@ -1936,17 +2174,6 @@
     <!-- Offline Indicator -->
     <div id="offline-indicator" class="offline-indicator">
         <i class="ri-wifi-off-line"></i> You're offline. Some features may be limited.
-    </div>
-
-    <!-- Install PWA Prompt -->
-    <div id="install-prompt" class="install-prompt">
-        <div class="install-content">
-            <p>🎵 Install TuneDrop for the best experience</p>
-            <div class="install-buttons">
-                <button id="install-btn" class="btn btn-install">Install</button>
-                <button id="dismiss-install" class="btn btn-dismiss">Later</button>
-            </div>
-        </div>
     </div>
 
     <!-- Warning Modal for Clean Vault -->
@@ -1964,23 +2191,52 @@
         </div>
     </div>
 
-    <!-- Welcome Modal -->
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-confirm-modal" class="modal delete-confirm-modal">
+        <div class="modal-content glass">
+            <div class="delete-confirm-icon">
+                <i class="ri-delete-bin-fill"></i>
+            </div>
+            <h2>Delete Song</h2>
+            <p>Are you sure you want to delete this song? This action cannot be undone.</p>
+            <div class="delete-confirm-buttons">
+                <button class="delete-confirm-btn cancel" id="cancel-delete">Cancel</button>
+                <button class="delete-confirm-btn confirm" id="confirm-delete">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome Modal with Password -->
     <div id="welcome-modal" class="modal welcome-modal">
         <div class="modal-content glass">
             <div class="welcome-illustration">
                 <i class="ri-music-2-fill"></i>
                 <h2>Welcome to TuneDrop!</h2>
-                <p>Share and discover music with the community.<br>Choose a unique username to get started.</p>
+                <p>Share and discover music with the community.<br>Choose a unique username and password to get started.
+                </p>
             </div>
 
             <form id="welcome-form">
                 <div class="form-group">
                     <input type="text" class="form-input" id="welcome-username" placeholder="Choose a username"
                         required>
-                    <!-- <small style="color: var(--text-secondary); font-size: 12px; display: block; margin-top: 4px;">
-                        Usernames starting with "admin" are reserved
-                    </small> -->
                     <div id="username-feedback" class="username-available" style="display: none;"></div>
+                </div>
+
+                <div class="form-group password-input-group">
+                    <input type="password" class="form-input" id="welcome-password" placeholder="Choose a password"
+                        required minlength="6">
+                    <button type="button" class="password-toggle" id="toggle-password">
+                        <i class="ri-eye-line"></i>
+                    </button>
+                    <div class="password-strength">
+                        <div class="password-strength-bar" id="password-strength-bar"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <input type="password" class="form-input" id="welcome-confirm-password"
+                        placeholder="Confirm password" required minlength="6">
                 </div>
 
                 <button type="submit" class="btn-submit" id="submit-username">
@@ -1993,14 +2249,6 @@
 
     <!-- Main App Container -->
     <div class="app-container" style="display: none;">
-        <!-- Top Ad Container -->
-        <!-- <div id="ad-container-top" class="ad-container">
-            <div class="ad-content">
-                <span class="ad-label">Ad</span>
-                <span>Upgrade to Premium for ad-free experience</span>
-            </div>
-        </div> -->
-
         <!-- Top Navigation with Refresh Button -->
         <header class="top-nav">
             <div class="logo-container">
@@ -2060,7 +2308,7 @@
                 <button class="rank-tab-btn" data-rank-type="users">Top Contributors</button>
             </div>
 
-            <!-- Time Filter - SCROLLABLE FIX -->
+            <!-- Time Filter -->
             <div class="time-filter" id="time-filter">
                 <button class="time-filter-btn active" data-period="day">Today</button>
                 <button class="time-filter-btn" data-period="week">Last Week</button>
@@ -2110,6 +2358,27 @@
         </main>
 
         <main id="achievements-page" class="tab-page">
+            <!-- Stats Section at Top -->
+            <div class="badges-stats" id="badges-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-posts">0</div>
+                    <div class="stat-label">Posts</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-likes">0</div>
+                    <div class="stat-label">Likes</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-listens">0</div>
+                    <div class="stat-label">Listens</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-badges">0</div>
+                    <div class="stat-label">Badges</div>
+                </div>
+            </div>
+
+            <!-- Badges Grid -->
             <div class="song-grid" style="grid-template-columns: repeat(2, 1fr);" id="badges-grid">
                 <!-- Badges loaded dynamically -->
             </div>
@@ -2161,14 +2430,6 @@
                 <span>Badges</span>
             </button>
         </nav>
-
-        <!-- Bottom Ad Container -->
-        <!-- <div id="ad-container-bottom" class="ad-container">
-            <div class="ad-content">
-                <span class="ad-label">Ad</span>
-                <span>Support indie artists on TuneDrop</span>
-            </div>
-        </div> -->
     </div>
 
     <!-- Post Modal -->
@@ -2216,7 +2477,7 @@
                     </select>
                 </div>
 
-                <!-- Mood Selector with Improved Icons - FIXED OVERLAPPING -->
+                <!-- Mood Selector -->
                 <div class="form-group">
                     <div class="mood-selector" id="mood-selector">
                         <button type="button" class="mood-option mood-chill" data-mood="chill">
@@ -2274,7 +2535,7 @@
         </div>
     </div>
 
-    <!-- Settings Modal -->
+    <!-- Settings Modal - Updated -->
     <div id="settings-modal" class="modal">
         <div class="modal-content glass">
             <div class="modal-header">
@@ -2321,10 +2582,20 @@
 
             <div class="settings-section">
                 <h3>Account</h3>
-                <div class="form-group">
-                    <input type="text" class="form-input" id="username-input" placeholder="Change Username">
+                <div class="username-display">
+                    <i class="ri-user-line"></i>
+                    <span id="settings-username">Loading...</span>
                 </div>
-                <button class="btn-submit" id="save-settings">
+
+                <div class="password-display-group">
+                    <i class="ri-lock-line password-display-icon"></i>
+                    <input type="text" class="password-display hidden" id="password-display" value="••••••••" readonly>
+                    <button type="button" class="password-display-toggle" id="toggle-password-display">
+                        <i class="ri-eye-line"></i>
+                    </button>
+                </div>
+
+                <button class="btn-submit" id="save-settings" style="margin-top: 8px;">
                     <i class="ri-save-line"></i>
                     <span>Save Settings</span>
                 </button>
@@ -2332,34 +2603,18 @@
                     <i class="ri-delete-bin-line"></i>
                     <span>Clean Vault</span>
                 </button>
+
+                <!-- <button class="btn-submit" id="logout-btn" style="margin-top: 8px; background: var(--danger);">
+                    <i class="ri-logout-box-line"></i>
+                    <span>Logout</span>
+                </button> -->
             </div>
 
-            <!-- User Stats -->
-            <div class="settings-section">
-                <h3>Your Stats</h3>
-                <div class="user-stats">
-                    <div class="stat-item">
-                        <div class="stat-value" id="stat-posts">0</div>
-                        <div class="stat-label">Posts</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="stat-likes">0</div>
-                        <div class="stat-label">Likes</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="stat-listens">0</div>
-                        <div class="stat-label">Listens</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="stat-badges">0</div>
-                        <div class="stat-label">Badges</div>
-                    </div>
-                </div>
-            </div>
+
         </div>
     </div>
 
-    <!-- Toast Notification - FIXED Z-INDEX -->
+    <!-- Toast Notification -->
     <div id="toast"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2371,10 +2626,9 @@
 
         // ========== ADMIN CONFIGURATION ==========
         const ADMIN_CONFIG = {
-            // Super Admin (you) - can add more sub-admins as needed
             superAdmin: {
                 displayName: 'admin',
-                dbUsername: 'admin_super', // Hidden from users
+                dbUsername: 'admin_super',
                 isSuperAdmin: true
             },
             subAdmins: [
@@ -2382,17 +2636,14 @@
                 { displayName: 'admin02', dbUsername: 'admin_02' },
                 { displayName: 'admin03', dbUsername: 'admin_03' }
             ],
-            // Maximum posts per day per user
             dailyPostLimit: 10,
-            // Content validation rules
             contentRules: {
                 minTitleLength: 3,
                 maxTitleLength: 100,
                 minArtistLength: 2,
                 maxArtistLength: 50,
-                // Regex to detect gibberish (simple pattern)
-                gibberishPattern: /^([a-z])\1{2,}$/i, // Matches repeated characters like "aaa"
-                urlPattern: /https?:\/\/[^\s]+$/ // Valid URL pattern
+                gibberishPattern: /^([a-z])\1{2,}$/i,
+                urlPattern: /https?:\/\/[^\s]+$/
             }
         };
 
@@ -2404,39 +2655,73 @@
                 currentTab: 'home',
                 currentLanguage: 'all',
                 currentMood: 'all',
-                currentTimeFilter: 'day', // Changed to 'day' as default
+                currentTimeFilter: 'day',
                 currentRankType: 'songs',
                 currentVaultTab: 'favs',
                 likedSongs: new Set(),
-                dislikedSongs: new Set(), // NEW: Track disliked songs
+                dislikedSongs: new Set(),
                 vaultSongs: new Set(),
                 badges: new Set(),
                 userStats: {
                     posts: 0,
                     likesGiven: 0,
-                    dislikesGiven: 0, // NEW: Track dislikes given
+                    dislikesGiven: 0,
                     listens: 0,
                     likedByOthers: 0,
-                    dislikedByOthers: 0 // NEW: Track dislikes received
+                    dislikedByOthers: 0
                 },
                 isLoading: false,
                 username: null,
-                dbUsername: null, // NEW: Separate database username
+                dbUsername: null,
+                passwordHash: null, // NEW: Store password hash
                 musicService: 'YouTube Music',
                 currentPlaying: null,
                 cardLayout: 'double',
-                // NEW: Track new content
                 lastRefreshTime: null,
                 hasNewContent: false,
-                // NEW: Track daily posts
                 dailyPosts: 0,
                 lastPostDate: null,
-                // NEW: Track if user is admin
                 isAdmin: false,
-                isSubAdmin: false
+                isSubAdmin: false,
+                sessionToken: null // NEW: For session management
             },
-            elements: null
+            elements: null,
+            pendingDeleteSongId: null // NEW: Track song to delete
         };
+
+        // ========== PASSWORD HELPER FUNCTIONS ==========
+        /**
+         * Simple hash function for passwords (for demo purposes)
+         * In production, use a proper hashing library like bcrypt
+         */
+        async function hashPassword(password) {
+            // Simple hash for demo - replace with proper implementation in production
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password + 'tunedrop_salt');
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        /**
+         * Verify password against stored hash
+         */
+        async function verifyPassword(password, storedHash) {
+            const hashed = await hashPassword(password);
+            return hashed === storedHash;
+        }
+
+        /**
+         * Check password strength
+         */
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            return strength;
+        }
 
         // ========== HELPER FUNCTIONS ==========
         function showToast(message, type = 'info') {
@@ -2477,22 +2762,18 @@
         function validateContent(title, artist = '') {
             const rules = ADMIN_CONFIG.contentRules;
 
-            // Check title length
             if (title.length < rules.minTitleLength || title.length > rules.maxTitleLength) {
                 return { valid: false, message: `Title must be between ${rules.minTitleLength} and ${rules.maxTitleLength} characters` };
             }
 
-            // Check artist length if provided
             if (artist && (artist.length < rules.minArtistLength || artist.length > rules.maxArtistLength)) {
                 return { valid: false, message: `Artist name must be between ${rules.minArtistLength} and ${rules.maxArtistLength} characters` };
             }
 
-            // Check for gibberish in title
             if (rules.gibberishPattern.test(title)) {
                 return { valid: false, message: 'Title appears to be gibberish' };
             }
 
-            // Check for gibberish in artist
             if (artist && rules.gibberishPattern.test(artist)) {
                 return { valid: false, message: 'Artist name appears to be gibberish' };
             }
@@ -2505,14 +2786,12 @@
          */
         async function checkDailyPostLimit() {
             try {
-                const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                const today = new Date().toISOString().split('T')[0];
 
-                // If we already have today's count in state and date matches
                 if (window.tunedrop.state.lastPostDate === today) {
                     return window.tunedrop.state.dailyPosts < ADMIN_CONFIG.dailyPostLimit;
                 }
 
-                // Query database for today's posts by this user
                 const { data, error } = await window.tunedrop.supabase
                     .from('items')
                     .select('created_at')
@@ -2522,14 +2801,11 @@
 
                 if (error) throw error;
 
-                // Update state
                 window.tunedrop.state.dailyPosts = data.length;
                 window.tunedrop.state.lastPostDate = today;
 
-                // Check against limit
                 const canPost = data.length < ADMIN_CONFIG.dailyPostLimit;
 
-                // Show warning if limit reached
                 if (!canPost) {
                     showToast(`Daily limit reached (${ADMIN_CONFIG.dailyPostLimit} posts/day)`, 'warning');
                 }
@@ -2537,12 +2813,12 @@
                 return canPost;
             } catch (error) {
                 console.error('Error checking daily post limit:', error);
-                return true; // Allow posting on error
+                return true;
             }
         }
 
         /**
-         * Creates a compact song card for home/vault pages
+         * Creates a compact song card for home/vault pages - FIXED DELETE BUTTON
          */
         function createSongCard(song, isVault = false, isFav = false) {
             const card = document.createElement('div');
@@ -2564,7 +2840,7 @@
             card.dataset.link = song.original_link || '';
 
             const isLiked = window.tunedrop.state.likedSongs.has(song.id.toString());
-            const isDisliked = window.tunedrop.state.dislikedSongs.has(song.id.toString()); // NEW
+            const isDisliked = window.tunedrop.state.dislikedSongs.has(song.id.toString());
 
             // Format original link for display
             let linkDisplay = '';
@@ -2643,8 +2919,31 @@
             return card;
         }
 
+
         /**
-         * Creates a leaderboard card for rank page
+ * Update all like buttons for a specific song on the page
+ */
+        function updateLikeButtonsOnPage(songId, isLiked, newLikeCount) {
+            // Update all like buttons for this song
+            document.querySelectorAll(`[data-song-id="${songId}"][data-action="like"]`).forEach(btn => {
+                btn.classList.toggle('liked', isLiked);
+                btn.querySelector('i').className = isLiked ? 'ri-heart-fill' : 'ri-heart-line';
+                btn.querySelector('.like-count').textContent = newLikeCount;
+            });
+
+            // Update all dislike buttons too (remove dislike if liking)
+            if (isLiked) {
+                document.querySelectorAll(`[data-song-id="${songId}"][data-action="dislike"]`).forEach(btn => {
+                    btn.classList.remove('disliked');
+                    btn.querySelector('i').className = 'ri-thumb-down-line';
+                    const currentCount = parseInt(btn.querySelector('.dislike-count').textContent) || 0;
+                    btn.querySelector('.dislike-count').textContent = Math.max(0, currentCount - 1);
+                });
+            }
+        }
+
+        /**
+         * Creates a leaderboard card for rank page - FIXED COLORS
          */
         function createLeaderboardCard(song, index, timePeriod) {
             const card = document.createElement('div');
@@ -2760,6 +3059,209 @@
         }
 
         // ========== DATABASE OPERATIONS ==========
+        /**
+ * Login user with username and password - ROBUST VERSION
+ */
+        async function loginUser(username, password) {
+            try {
+                console.log('Attempting login for:', username);
+
+                // Get user profile from database
+                const { data: userProfile, error } = await window.tunedrop.supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('username', username)
+                    .maybeSingle(); // Use maybeSingle to handle no results
+
+                if (error) {
+                    console.error('Database error during login:', error);
+                    return { success: false, message: 'Database error during login' };
+                }
+
+                if (!userProfile) {
+                    console.log('User not found:', username);
+                    return { success: false, message: 'User not found' };
+                }
+
+                // Verify password
+                console.log('Verifying password...');
+                const isValid = await verifyPassword(password, userProfile.password_hash);
+
+                if (!isValid) {
+                    console.log('Invalid password for user:', username);
+                    return { success: false, message: 'Invalid password' };
+                }
+
+                console.log('Login successful for:', username);
+
+                // Return user profile with defaults for missing fields
+                return {
+                    success: true,
+                    userProfile: {
+                        username: userProfile.username,
+                        display_name: userProfile.display_name || userProfile.username,
+                        password_hash: userProfile.password_hash,
+                        liked_songs: userProfile.liked_songs || [],
+                        disliked_songs: userProfile.disliked_songs || [],
+                        vault_songs: userProfile.vault_songs || [],
+                        badges: userProfile.badges || [],
+                        stats: typeof userProfile.stats === 'string' ?
+                            JSON.parse(userProfile.stats) :
+                            (userProfile.stats || {
+                                posts: 0,
+                                likesGiven: 0,
+                                dislikesGiven: 0,
+                                listens: 0,
+                                likedByOthers: 0,
+                                dislikedByOthers: 0
+                            }),
+                        settings: typeof userProfile.settings === 'string' ?
+                            JSON.parse(userProfile.settings) :
+                            (userProfile.settings || {
+                                cardLayout: 'double',
+                                musicService: 'YouTube Music'
+                            }),
+                        last_login: userProfile.last_login
+                    }
+                };
+            } catch (error) {
+                console.error('Error logging in:', error);
+                return { success: false, message: 'Login failed' };
+            }
+        }
+
+        /**
+ * Register new user - SIMPLIFIED VERSION
+ */
+        async function registerUser(username, password, displayName = null) {
+            try {
+                console.log('Starting registration for:', username);
+
+                // First, try to get existing user to check if they exist
+                const { data: existingUser, error: fetchError } = await window.tunedrop.supabase
+                    .from('user_profiles')
+                    .select('username')
+                    .eq('username', username)
+                    .maybeSingle(); // Use maybeSingle instead of single
+
+                if (fetchError && fetchError.code !== 'PGRST116') {
+                    console.error('Error checking user:', fetchError);
+                    return { success: false, message: 'Error checking username availability' };
+                }
+
+                // If user exists, return error
+                if (existingUser) {
+                    console.log('User already exists:', username);
+                    return { success: false, message: 'Username already exists' };
+                }
+
+                // Hash password
+                const passwordHash = await hashPassword(password);
+                console.log('Password hashed successfully');
+
+                // Create basic user profile
+                const userData = {
+                    username: username,
+                    display_name: displayName || username,
+                    password_hash: passwordHash,
+                    liked_songs: [],
+                    disliked_songs: [],
+                    vault_songs: [],
+                    badges: [],
+                    stats: JSON.stringify({
+                        posts: 0,
+                        likesGiven: 0,
+                        dislikesGiven: 0,
+                        listens: 0,
+                        likedByOthers: 0,
+                        dislikedByOthers: 0
+                    }),
+                    settings: JSON.stringify({
+                        cardLayout: 'double',
+                        musicService: 'YouTube Music'
+                    }),
+                    last_login: new Date().toISOString()
+                };
+
+                console.log('Attempting to insert user:', userData);
+
+                // Try to insert the user
+                const { data, error } = await window.tunedrop.supabase
+                    .from('user_profiles')
+                    .insert([userData])
+                    .select();
+
+                if (error) {
+                    console.error('Database insert error:', error);
+
+                    // If it's a column error, try a simpler insert
+                    if (error.message.includes('column') && error.message.includes('does not exist')) {
+                        console.log('Trying simplified insert...');
+
+                        // Try with only basic columns
+                        const simpleUserData = {
+                            username: username,
+                            password_hash: passwordHash,
+                            last_login: new Date().toISOString()
+                        };
+
+                        const { data: simpleData, error: simpleError } = await window.tunedrop.supabase
+                            .from('user_profiles')
+                            .insert([simpleUserData])
+                            .select();
+
+                        if (simpleError) {
+                            throw simpleError;
+                        }
+
+                        return {
+                            success: true,
+                            userProfile: {
+                                username: username,
+                                display_name: username,
+                                password_hash: passwordHash
+                            }
+                        };
+                    }
+
+                    throw error;
+                }
+
+                console.log('User created successfully:', data);
+
+                return {
+                    success: true,
+                    userProfile: {
+                        username: username,
+                        display_name: displayName || username,
+                        password_hash: passwordHash,
+                        liked_songs: [],
+                        disliked_songs: [],
+                        vault_songs: [],
+                        badges: [],
+                        stats: {
+                            posts: 0,
+                            likesGiven: 0,
+                            dislikesGiven: 0,
+                            listens: 0,
+                            likedByOthers: 0,
+                            dislikedByOthers: 0
+                        },
+                        settings: {
+                            cardLayout: 'double',
+                            musicService: 'YouTube Music'
+                        }
+                    }
+                };
+            } catch (error) {
+                console.error('Error registering user:', error);
+                return {
+                    success: false,
+                    message: error.message || 'Registration failed. Please try again.'
+                };
+            }
+        }
+
         async function loadSongs(language = 'all', mood = 'all') {
             try {
                 let query = window.tunedrop.supabase
@@ -2795,16 +3297,14 @@
         }
 
         /**
-         * Load top songs by time period - FIXED "Today" filter
+         * Load top songs by time period
          */
-        async function loadTopSongsByTime(timePeriod = 'day') { // Changed default to 'day'
+        async function loadTopSongsByTime(timePeriod = 'day') {
             try {
                 let startDate = new Date();
 
-                // FIXED: Proper date calculation for each period
                 switch (timePeriod) {
                     case 'day':
-                        // Last 24 hours
                         startDate.setHours(startDate.getHours() - 24);
                         break;
                     case 'week':
@@ -2822,7 +3322,6 @@
                 }
 
                 if (timePeriod === 'lifetime') {
-                    // For lifetime, use the existing items table likes
                     const { data: items, error } = await window.tunedrop.supabase
                         .from('items')
                         .select('*')
@@ -2832,7 +3331,6 @@
                     if (error) throw error;
                     return items || [];
                 } else {
-                    // For time periods, query song_likes and join with items
                     const { data, error } = await window.tunedrop.supabase
                         .from('song_likes')
                         .select(`
@@ -2844,7 +3342,6 @@
 
                     if (error) throw error;
 
-                    // Count likes per song
                     const likeCounts = {};
                     data.forEach(like => {
                         if (like.items) {
@@ -2858,7 +3355,6 @@
                         }
                     });
 
-                    // Convert to array and sort by like count
                     const songsArray = Object.values(likeCounts)
                         .sort((a, b) => b.count - a.count)
                         .slice(0, 20)
@@ -2876,8 +3372,8 @@
         }
 
         /**
- * Load top contributors (users) - FIXED TIME FILTER
- */
+         * Load top contributors
+         */
         async function loadTopContributors(timePeriod = 'day') {
             try {
                 let startDate = new Date();
@@ -2901,14 +3397,12 @@
                 }
 
                 if (timePeriod === 'lifetime') {
-                    // For lifetime: use existing logic with items table
                     const { data: items, error } = await window.tunedrop.supabase
                         .from('items')
                         .select('poster_username, likes, listens');
 
                     if (error) throw error;
 
-                    // Aggregate user data
                     const userStats = {};
 
                     items.forEach(item => {
@@ -2928,7 +3422,6 @@
                         userStats[username].listens_received += (item.listens || 0);
                     });
 
-                    // Convert to array and sort by posts
                     const contributors = Object.entries(userStats)
                         .map(([username, stats]) => ({ username, ...stats }))
                         .sort((a, b) => b.posts - a.posts)
@@ -2936,9 +3429,6 @@
 
                     return contributors;
                 } else {
-                    // For time periods: Need to query multiple tables
-
-                    // 1. Get posts in time period
                     const { data: items, error: itemsError } = await window.tunedrop.supabase
                         .from('items')
                         .select('id, poster_username, created_at')
@@ -2946,7 +3436,6 @@
 
                     if (itemsError) throw itemsError;
 
-                    // 2. Get likes in time period from song_likes table
                     const { data: likes, error: likesError } = await window.tunedrop.supabase
                         .from('song_likes')
                         .select('song_id, username, created_at')
@@ -2954,13 +3443,8 @@
 
                     if (likesError) throw likesError;
 
-                    // 3. Get listens (we need to track these separately - currently not in DB)
-                    // For now, we'll use items.listens which is lifetime
-
-                    // Aggregate user data
                     const userStats = {};
 
-                    // Count posts per user
                     items.forEach(item => {
                         const username = item.poster_username;
                         if (!username) return;
@@ -2976,8 +3460,6 @@
                         userStats[username].posts += 1;
                     });
 
-                    // Count likes per user (based on their posts being liked)
-                    // Create a map of song_id to poster_username
                     const songToUser = {};
                     items.forEach(item => {
                         songToUser[item.id] = item.poster_username;
@@ -2990,10 +3472,9 @@
                         }
                     });
 
-                    // Convert to array and sort by likes received
                     const contributors = Object.entries(userStats)
                         .map(([username, stats]) => ({ username, ...stats }))
-                        .sort((a, b) => b.likes_received - a.likes_received) // Sort by likes, not posts
+                        .sort((a, b) => b.likes_received - a.likes_received)
                         .slice(0, 20);
 
                     return contributors;
@@ -3016,7 +3497,6 @@
 
                 if (error) throw error;
 
-                // Separate into favs (liked) and listened (not liked but in vault)
                 const favs = [];
                 const listened = [];
 
@@ -3028,9 +3508,7 @@
                     }
                 });
 
-                // Sort favs by newest first
                 favs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                // Sort listened by newest first
                 listened.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
                 return { favs, listened };
@@ -3092,29 +3570,77 @@
         }
 
         async function saveUserProfileToDatabase() {
-            if (!window.tunedrop.state.dbUsername) return;
+            if (!window.tunedrop.state.dbUsername) {
+                console.log('No username, skipping save');
+                return;
+            }
 
             try {
+                // Prepare basic user data
                 const userData = {
                     username: window.tunedrop.state.dbUsername,
                     display_name: window.tunedrop.state.username,
-                    liked_songs: Array.from(window.tunedrop.state.likedSongs),
-                    disliked_songs: Array.from(window.tunedrop.state.dislikedSongs),
-                    vault_songs: Array.from(window.tunedrop.state.vaultSongs),
-                    badges: Array.from(window.tunedrop.state.badges),
-                    stats: window.tunedrop.state.userStats,
-                    last_login: new Date().toISOString(),
-                    settings: {
-                        cardLayout: window.tunedrop.state.cardLayout,
-                        musicService: window.tunedrop.state.musicService
-                    }
+                    password_hash: window.tunedrop.state.passwordHash,
+                    last_login: new Date().toISOString()
                 };
 
+                // Only add these fields if they exist
+                if (window.tunedrop.state.likedSongs.size > 0) {
+                    userData.liked_songs = Array.from(window.tunedrop.state.likedSongs);
+                }
+
+                if (window.tunedrop.state.dislikedSongs.size > 0) {
+                    userData.disliked_songs = Array.from(window.tunedrop.state.dislikedSongs);
+                }
+
+                if (window.tunedrop.state.vaultSongs.size > 0) {
+                    userData.vault_songs = Array.from(window.tunedrop.state.vaultSongs);
+                }
+
+                if (window.tunedrop.state.badges.size > 0) {
+                    userData.badges = Array.from(window.tunedrop.state.badges);
+                }
+
+                // Add stats and settings as JSON strings
+                userData.stats = JSON.stringify(window.tunedrop.state.userStats || {});
+                userData.settings = JSON.stringify({
+                    cardLayout: window.tunedrop.state.cardLayout,
+                    musicService: window.tunedrop.state.musicService
+                });
+
+                console.log('Saving user profile:', userData);
+
+                // Use upsert to create or update
                 const { error } = await window.tunedrop.supabase
                     .from('user_profiles')
-                    .upsert(userData, { onConflict: 'username' });
+                    .upsert(userData, {
+                        onConflict: 'username',
+                        ignoreDuplicates: false
+                    });
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Supabase error:', error);
+
+                    // Try a simpler insert if upsert fails
+                    const simpleData = {
+                        username: window.tunedrop.state.dbUsername,
+                        password_hash: window.tunedrop.state.passwordHash,
+                        last_login: new Date().toISOString()
+                    };
+
+                    const { error: simpleError } = await window.tunedrop.supabase
+                        .from('user_profiles')
+                        .insert([simpleData]);
+
+                    if (simpleError) {
+                        throw simpleError;
+                    }
+
+                    console.log('User profile saved with simple data');
+                    return true;
+                }
+
+                console.log('User profile saved successfully');
                 return true;
             } catch (error) {
                 console.error('Error saving user profile:', error);
@@ -3148,7 +3674,6 @@
             try {
                 // Block usernames starting with "admin" for non-admin users
                 if (username.toLowerCase().startsWith('admin')) {
-                    // Check if it's one of the allowed admin usernames
                     const allowedAdmins = [
                         ADMIN_CONFIG.superAdmin.displayName,
                         ...ADMIN_CONFIG.subAdmins.map(admin => admin.displayName)
@@ -3180,7 +3705,7 @@
 
         // ========== EVENT HANDLERS ==========
         /**
-         * Handle like action - FIXED
+         * Handle like action
          */
         async function handleLike(songId, songPoster) {
             const likeBtn = document.querySelector(`[data-song-id="${songId}"][data-action="like"]`);
@@ -3201,7 +3726,6 @@
 
                     if (deleteError) throw deleteError;
 
-                    // Update count in items table
                     const { data: song } = await window.tunedrop.supabase
                         .from('items')
                         .select('likes')
@@ -3225,7 +3749,6 @@
 
                     if (insertError && insertError.code !== '23505') throw insertError;
 
-                    // Update count in items table
                     const { data: song } = await window.tunedrop.supabase
                         .from('items')
                         .select('likes')
@@ -3241,24 +3764,19 @@
                     window.tunedrop.state.likedSongs.add(songId.toString());
                     window.tunedrop.state.userStats.likesGiven = (window.tunedrop.state.userStats.likesGiven || 0) + 1;
 
-                    // Add to vault if not already
                     if (!window.tunedrop.state.vaultSongs.has(songId.toString())) {
                         window.tunedrop.state.vaultSongs.add(songId.toString());
                     }
 
-                    // If user disliked this song before, remove dislike
                     if (window.tunedrop.state.dislikedSongs.has(songId.toString())) {
-                        await handleDislike(songId, songPoster, true); // Force remove dislike
+                        await handleDislike(songId, songPoster, true);
                     }
 
-                    // Show notification if someone else's song
                     if (songPoster !== window.tunedrop.state.dbUsername) {
-                        // In a real app, you would send a notification to the poster
                         console.log(`User ${window.tunedrop.state.username} liked ${songPoster}'s song`);
                     }
                 }
 
-                // Update UI immediately
                 const currentCount = parseInt(likeBtn.querySelector('.like-count').textContent) || 0;
                 const newCount = isLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
 
@@ -3269,7 +3787,6 @@
                 await saveUserProfileToDatabase();
                 saveToLocalStorage();
 
-                // Update stats display
                 updateStatsDisplay();
 
             } catch (error) {
@@ -3281,7 +3798,7 @@
         }
 
         /**
-         * Handle dislike action - NEW IMPLEMENTATION
+         * Handle dislike action
          */
         async function handleDislike(songId, songPoster, forceRemove = false) {
             const dislikeBtn = document.querySelector(`[data-song-id="${songId}"][data-action="dislike"]`);
@@ -3293,7 +3810,6 @@
                 const isDisliked = window.tunedrop.state.dislikedSongs.has(songId.toString());
 
                 if (isDisliked || forceRemove) {
-                    // Remove dislike
                     const { error: deleteError } = await window.tunedrop.supabase
                         .from('song_dislikes')
                         .delete()
@@ -3302,7 +3818,6 @@
 
                     if (deleteError) throw deleteError;
 
-                    // Update count in items table
                     const { data: song } = await window.tunedrop.supabase
                         .from('items')
                         .select('dislikes')
@@ -3319,14 +3834,12 @@
                     window.tunedrop.state.userStats.dislikesGiven = Math.max(0, (window.tunedrop.state.userStats.dislikesGiven || 0) - 1);
 
                 } else {
-                    // Dislike
                     const { error: insertError } = await window.tunedrop.supabase
                         .from('song_dislikes')
                         .insert([{ song_id: songId, username: window.tunedrop.state.dbUsername }]);
 
                     if (insertError && insertError.code !== '23505') throw insertError;
 
-                    // Update count in items table
                     const { data: song } = await window.tunedrop.supabase
                         .from('items')
                         .select('dislikes')
@@ -3342,13 +3855,11 @@
                     window.tunedrop.state.dislikedSongs.add(songId.toString());
                     window.tunedrop.state.userStats.dislikesGiven = (window.tunedrop.state.userStats.dislikesGiven || 0) + 1;
 
-                    // If user liked this song before, remove like
                     if (window.tunedrop.state.likedSongs.has(songId.toString())) {
-                        await handleLike(songId, songPoster); // This will remove the like
+                        await handleLike(songId, songPoster);
                     }
                 }
 
-                // Update UI immediately
                 const currentCount = parseInt(dislikeBtn.querySelector('.dislike-count').textContent) || 0;
                 const newCount = (isDisliked || forceRemove) ? Math.max(0, currentCount - 1) : currentCount + 1;
 
@@ -3359,7 +3870,6 @@
                 await saveUserProfileToDatabase();
                 saveToLocalStorage();
 
-                // Update stats display
                 updateStatsDisplay();
 
             } catch (error) {
@@ -3371,7 +3881,7 @@
         }
 
         /**
-         * Handle delete song (admin only)
+         * Handle delete song (admin only) - WITH CONFIRMATION
          */
         async function handleDeleteSong(songId) {
             if (!window.tunedrop.state.isAdmin) {
@@ -3379,14 +3889,24 @@
                 return;
             }
 
-            try {
-                const confirmed = confirm('Are you sure you want to delete this song? This action cannot be undone.');
-                if (!confirmed) return;
+            // Store the song ID for confirmation
+            window.tunedrop.pendingDeleteSongId = songId;
 
+            // Show confirmation modal
+            document.getElementById('delete-confirm-modal').classList.add('show');
+        }
+
+        /**
+         * Confirm delete song
+         */
+        async function confirmDeleteSong() {
+            const songId = window.tunedrop.pendingDeleteSongId;
+            if (!songId) return;
+
+            try {
                 const success = await deleteSongFromDatabase(songId);
 
                 if (success) {
-                    // Remove card from UI
                     const card = document.querySelector(`[data-song-id="${songId}"]`);
                     if (card) {
                         card.style.animation = 'slideOut 0.3s ease forwards';
@@ -3395,7 +3915,6 @@
 
                     showToast('Song deleted successfully', 'success');
 
-                    // Refresh current view
                     switch (window.tunedrop.state.currentTab) {
                         case 'home':
                             await renderHomePage();
@@ -3413,33 +3932,259 @@
             } catch (error) {
                 console.error('Error deleting song:', error);
                 showToast('Failed to delete song', 'error');
+            } finally {
+                window.tunedrop.pendingDeleteSongId = null;
+                document.getElementById('delete-confirm-modal').classList.remove('show');
             }
         }
 
         /**
          * Handle favorite from mini-player
          */
+        /**
+ * Handle favorite from mini-player - FIXED VERSION
+ */
+        /**
+ * Handle favorite from mini-player - IMPROVED VERSION
+ */
         async function handlePlayerFavorite() {
-            if (!window.tunedrop.state.currentPlaying) return;
+            console.log('Player favorite button clicked');
+
+            if (!window.tunedrop.state.currentPlaying) {
+                console.log('No song currently playing');
+                showToast('No song is playing', 'warning');
+                return;
+            }
 
             const songId = window.tunedrop.state.currentPlaying.id;
             const isLiked = window.tunedrop.state.likedSongs.has(songId.toString());
+            const playerFavoriteBtn = document.getElementById('player-favorite');
+
+            console.log('Song ID:', songId, 'Is liked:', isLiked);
+
+            // Try to find the song card on ANY page, not just current page
+            let songCard = document.querySelector(`[data-song-id="${songId}"]`);
+            let songPoster = null;
+
+            if (songCard) {
+                // Song card found on current page
+                songPoster = songCard.dataset.poster;
+                console.log('Song card found on current page, poster:', songPoster);
+            } else {
+                // Song card not found on current page - get poster from currentPlaying or database
+                console.log('Song card not found on current page, trying alternatives...');
+
+                // Try to get poster from currentPlaying if it was stored
+                if (window.tunedrop.state.currentPlaying.poster) {
+                    songPoster = window.tunedrop.state.currentPlaying.poster;
+                    console.log('Got poster from currentPlaying:', songPoster);
+                } else {
+                    // Fallback: get song info from database
+                    try {
+                        console.log('Fetching song info from database...');
+                        const { data: song, error } = await window.tunedrop.supabase
+                            .from('items')
+                            .select('poster_username')
+                            .eq('id', songId)
+                            .single();
+
+                        if (error) throw error;
+
+                        songPoster = song.poster_username;
+                        console.log('Got poster from database:', songPoster);
+
+                        // Update currentPlaying with poster info for future use
+                        window.tunedrop.state.currentPlaying.poster = songPoster;
+                    } catch (error) {
+                        console.error('Error fetching song from database:', error);
+                        // Default to current user if we can't find poster
+                        songPoster = window.tunedrop.state.dbUsername;
+                        console.log('Using current user as fallback poster:', songPoster);
+                    }
+                }
+            }
 
             if (!isLiked) {
-                // Find the like button and trigger click
+                // Like the song
+                console.log('Attempting to like song...');
+
+                // Try to find the like button on the page
                 const likeBtn = document.querySelector(`[data-song-id="${songId}"][data-action="like"]`);
+
                 if (likeBtn) {
+                    console.log('Found like button on page, triggering click...');
                     likeBtn.click();
 
-                    // Update player favorite button
-                    const playerFavoriteBtn = document.getElementById('player-favorite');
+                    // Update player favorite button UI immediately
                     playerFavoriteBtn.classList.add('active');
                     playerFavoriteBtn.innerHTML = '<i class="ri-heart-fill"></i>';
+                    playerFavoriteBtn.title = 'Remove from favorites';
 
+                    // Show success message
                     showToast('Added to favorites!', 'success');
+
+                    console.log('Favorite added successfully via button click');
+
+                } else {
+                    console.log('Like button not found on page, manually liking song...');
+
+                    // Manually like the song
+                    try {
+                        // Insert like into database
+                        const { error: insertError } = await window.tunedrop.supabase
+                            .from('song_likes')
+                            .insert([{ song_id: songId, username: window.tunedrop.state.dbUsername }]);
+
+                        if (insertError && insertError.code !== '23505') throw insertError;
+
+                        // Update like count in items table
+                        const { data: song } = await window.tunedrop.supabase
+                            .from('items')
+                            .select('likes')
+                            .eq('id', songId)
+                            .single();
+
+                        const updates = {
+                            likes: (song.likes || 0) + 1
+                        };
+
+                        await updateSongInDatabase(songId, updates);
+
+                        // Update local state
+                        window.tunedrop.state.likedSongs.add(songId.toString());
+                        window.tunedrop.state.userStats.likesGiven = (window.tunedrop.state.userStats.likesGiven || 0) + 1;
+
+                        // Add to vault if not already
+                        if (!window.tunedrop.state.vaultSongs.has(songId.toString())) {
+                            window.tunedrop.state.vaultSongs.add(songId.toString());
+                        }
+
+                        // If user disliked this song before, remove dislike
+                        if (window.tunedrop.state.dislikedSongs.has(songId.toString())) {
+                            // Remove dislike
+                            await window.tunedrop.supabase
+                                .from('song_dislikes')
+                                .delete()
+                                .eq('song_id', songId)
+                                .eq('username', window.tunedrop.state.dbUsername);
+
+                            window.tunedrop.state.dislikedSongs.delete(songId.toString());
+                            window.tunedrop.state.userStats.dislikesGiven = Math.max(0, (window.tunedrop.state.userStats.dislikesGiven || 0) - 1);
+                        }
+
+                        // Update player favorite button UI
+                        playerFavoriteBtn.classList.add('active');
+                        playerFavoriteBtn.innerHTML = '<i class="ri-heart-fill"></i>';
+                        playerFavoriteBtn.title = 'Remove from favorites';
+
+                        // Update any visible like buttons on the page
+                        document.querySelectorAll(`[data-song-id="${songId}"][data-action="like"]`).forEach(btn => {
+                            const currentCount = parseInt(btn.querySelector('.like-count').textContent) || 0;
+                            btn.classList.add('liked');
+                            btn.querySelector('i').className = 'ri-heart-fill';
+                            btn.querySelector('.like-count').textContent = currentCount + 1;
+                        });
+
+                        // Save changes
+                        await saveUserProfileToDatabase();
+                        saveToLocalStorage();
+
+                        // Update stats display
+                        updateStatsDisplay();
+
+                        // Show success message
+                        showToast('Added to favorites!', 'success');
+
+                        console.log('Favorite added successfully via manual process');
+
+                    } catch (error) {
+                        console.error('Error manually liking song:', error);
+                        showToast('Failed to add to favorites', 'error');
+                    }
                 }
+
             } else {
-                showToast('Already in favorites', 'info');
+                // Unlike the song
+                console.log('Attempting to unlike song...');
+
+                // Try to find the like button on the page
+                const likeBtn = document.querySelector(`[data-song-id="${songId}"][data-action="like"]`);
+
+                if (likeBtn) {
+                    console.log('Found like button on page, triggering click...');
+                    likeBtn.click();
+
+                    // Update player favorite button UI
+                    playerFavoriteBtn.classList.remove('active');
+                    playerFavoriteBtn.innerHTML = '<i class="ri-heart-line"></i>';
+                    playerFavoriteBtn.title = 'Add to favorites';
+
+                    // Show info message
+                    showToast('Removed from favorites', 'info');
+
+                    console.log('Favorite removed successfully via button click');
+
+                } else {
+                    console.log('Like button not found on page, manually unliking...');
+
+                    // Manually unlike the song
+                    try {
+                        // Remove like from database
+                        const { error: deleteError } = await window.tunedrop.supabase
+                            .from('song_likes')
+                            .delete()
+                            .eq('song_id', songId)
+                            .eq('username', window.tunedrop.state.dbUsername);
+
+                        if (deleteError) throw deleteError;
+
+                        // Update like count in items table
+                        const { data: song } = await window.tunedrop.supabase
+                            .from('items')
+                            .select('likes')
+                            .eq('id', songId)
+                            .single();
+
+                        const updates = {
+                            likes: Math.max(0, (song.likes || 0) - 1)
+                        };
+
+                        await updateSongInDatabase(songId, updates);
+
+                        // Update local state
+                        window.tunedrop.state.likedSongs.delete(songId.toString());
+                        window.tunedrop.state.userStats.likesGiven = Math.max(0, (window.tunedrop.state.userStats.likesGiven || 0) - 1);
+
+                        // Update player favorite button UI
+                        playerFavoriteBtn.classList.remove('active');
+                        playerFavoriteBtn.innerHTML = '<i class="ri-heart-line"></i>';
+                        playerFavoriteBtn.title = 'Add to favorites';
+
+                        // Update any visible like buttons on the page
+                        document.querySelectorAll(`[data-song-id="${songId}"][data-action="like"]`).forEach(btn => {
+                            const currentCount = parseInt(btn.querySelector('.like-count').textContent) || 0;
+                            btn.classList.remove('liked');
+                            btn.querySelector('i').className = 'ri-heart-line';
+                            btn.querySelector('.like-count').textContent = Math.max(0, currentCount - 1);
+                        });
+
+                        // Save changes
+                        await saveUserProfileToDatabase();
+                        saveToLocalStorage();
+
+                        // Update stats display
+                        updateStatsDisplay();
+
+                        // Show info message
+                        showToast('Removed from favorites', 'info');
+
+                        console.log('Favorite removed successfully via manual process');
+
+                    } catch (error) {
+                        console.error('Error manually unliking song:', error);
+                        showToast('Failed to remove from favorites', 'error');
+                    }
+                }
             }
         }
 
@@ -3491,7 +4236,6 @@
                     </div>
                 `;
 
-                // Use the new time-based function
                 const songs = await loadTopSongsByTime(window.tunedrop.state.currentTimeFilter);
 
                 songsGrid.innerHTML = '';
@@ -3510,7 +4254,6 @@
                     songsGrid.appendChild(createLeaderboardCard(song, index, window.tunedrop.state.currentTimeFilter));
                 });
             } else {
-                // Top Contributors
                 songsGrid.style.display = 'none';
                 usersGrid.style.display = 'flex';
 
@@ -3545,7 +4288,6 @@
             const favGrid = document.getElementById('fav-grid');
             const listenedGrid = document.getElementById('listened-grid');
 
-            // Show loading state for active tab
             if (window.tunedrop.state.currentVaultTab === 'favs') {
                 favGrid.innerHTML = `
                     <div class="empty-state">
@@ -3564,7 +4306,6 @@
 
             const { favs, listened } = await loadVaultSections();
 
-            // Render favorites
             favGrid.innerHTML = '';
             if (favs.length === 0) {
                 favGrid.innerHTML = `
@@ -3580,7 +4321,6 @@
                 });
             }
 
-            // Render listened
             listenedGrid.innerHTML = '';
             if (listened.length === 0) {
                 listenedGrid.innerHTML = `
@@ -3679,18 +4419,15 @@
                 }
             ];
 
-            // Separate unlocked and locked badges
             const unlocked = badges.filter(badge => badge.condition());
             const locked = badges.filter(badge => !badge.condition());
 
             grid.innerHTML = '';
 
-            // Show unlocked badges first
             unlocked.forEach(badge => {
                 addBadgeToGrid(badge, true);
             });
 
-            // Then locked badges
             locked.forEach(badge => {
                 addBadgeToGrid(badge, false);
             });
@@ -3719,7 +4456,7 @@
         }
 
         /**
-         * Update stats display in settings
+         * Update stats display in badges page
          */
         function updateStatsDisplay() {
             document.getElementById('stat-posts').textContent = window.tunedrop.state.userStats.posts || 0;
@@ -3730,9 +4467,12 @@
 
         // ========== LOCAL STORAGE MANAGEMENT ==========
         function saveToLocalStorage() {
+            console.log('💾 Saving user data to localStorage...');
+
             const userData = {
                 username: window.tunedrop.state.username,
                 dbUsername: window.tunedrop.state.dbUsername,
+                passwordHash: window.tunedrop.state.passwordHash,
                 likedSongs: Array.from(window.tunedrop.state.likedSongs),
                 dislikedSongs: Array.from(window.tunedrop.state.dislikedSongs),
                 vaultSongs: Array.from(window.tunedrop.state.vaultSongs),
@@ -3743,65 +4483,219 @@
                 theme: document.documentElement.classList.contains('light-theme') ? 'light' : 'dark',
                 accentColor: getComputedStyle(document.documentElement)
                     .getPropertyValue('--accent').trim(),
-                // NEW: Save admin status
                 isAdmin: window.tunedrop.state.isAdmin,
                 isSubAdmin: window.tunedrop.state.isSubAdmin,
-                // NEW: Save refresh time
                 lastRefreshTime: window.tunedrop.state.lastRefreshTime,
-                // NEW: Save daily post info
                 dailyPosts: window.tunedrop.state.dailyPosts,
-                lastPostDate: window.tunedrop.state.lastPostDate
+                lastPostDate: window.tunedrop.state.lastPostDate,
+                sessionToken: window.tunedrop.state.sessionToken || generateSessionToken(),
+                savedAt: new Date().toISOString()
             };
 
-            localStorage.setItem('tunedrop_user', JSON.stringify(userData));
-        }
-
-        function loadFromLocalStorage() {
-            const saved = localStorage.getItem('tunedrop_user');
-            if (saved) {
+            try {
+                localStorage.setItem('tunedrop_user', JSON.stringify(userData));
+                console.log('✅ User data saved to localStorage');
+            } catch (error) {
+                console.error('❌ Error saving to localStorage:', error);
+                // Try to clear some space or use fallback
                 try {
-                    const userData = JSON.parse(saved);
-
-                    window.tunedrop.state.username = userData.username;
-                    window.tunedrop.state.dbUsername = userData.dbUsername || userData.username; // Fallback for old users
-                    window.tunedrop.state.likedSongs = new Set(userData.likedSongs || []);
-                    window.tunedrop.state.dislikedSongs = new Set(userData.dislikedSongs || []);
-                    window.tunedrop.state.vaultSongs = new Set(userData.vaultSongs || []);
-                    window.tunedrop.state.badges = new Set(userData.badges || []);
-                    window.tunedrop.state.userStats = userData.userStats || window.tunedrop.state.userStats;
-                    window.tunedrop.state.musicService = userData.musicService || window.tunedrop.state.musicService;
-                    window.tunedrop.state.cardLayout = userData.cardLayout || 'double';
-                    window.tunedrop.state.isAdmin = userData.isAdmin || false;
-                    window.tunedrop.state.isSubAdmin = userData.isSubAdmin || false;
-                    window.tunedrop.state.lastRefreshTime = userData.lastRefreshTime || null;
-                    window.tunedrop.state.dailyPosts = userData.dailyPosts || 0;
-                    window.tunedrop.state.lastPostDate = userData.lastPostDate || null;
-
-                    if (userData.theme === 'light') {
-                        document.documentElement.classList.remove('dark-theme');
-                        document.documentElement.classList.add('light-theme');
-                    }
-
-                    if (userData.accentColor) {
-                        document.documentElement.style.setProperty('--accent', userData.accentColor);
-                    }
-
-                    // Check admin status again
-                    if (window.tunedrop.state.dbUsername) {
-                        const adminStatus = checkAdminStatus(
-                            window.tunedrop.state.username,
-                            window.tunedrop.state.dbUsername
-                        );
-                        window.tunedrop.state.isAdmin = adminStatus.isAdmin;
-                        window.tunedrop.state.isSubAdmin = adminStatus.isAdmin && !adminStatus.isSuperAdmin;
-                    }
-
-                    return userData.username;
-                } catch (error) {
-                    console.error('Error loading from localStorage:', error);
+                    // Remove old data if storage is full
+                    localStorage.removeItem('tunedrop_user_old');
+                    localStorage.setItem('tunedrop_user', JSON.stringify(userData));
+                } catch (e) {
+                    console.error('❌ Could not save to localStorage at all');
                 }
             }
-            return null;
+        }
+
+        function logoutUser() {
+            console.log('👋 Logging out user...');
+
+            // Clear all state
+            window.tunedrop.state = {
+                currentUser: null,
+                currentTab: 'home',
+                currentLanguage: 'all',
+                currentMood: 'all',
+                currentTimeFilter: 'day',
+                currentRankType: 'songs',
+                currentVaultTab: 'favs',
+                likedSongs: new Set(),
+                dislikedSongs: new Set(),
+                vaultSongs: new Set(),
+                badges: new Set(),
+                userStats: {
+                    posts: 0,
+                    likesGiven: 0,
+                    dislikesGiven: 0,
+                    listens: 0,
+                    likedByOthers: 0,
+                    dislikedByOthers: 0
+                },
+                isLoading: false,
+                username: null,
+                dbUsername: null,
+                passwordHash: null,
+                musicService: 'YouTube Music',
+                currentPlaying: null,
+                cardLayout: 'double',
+                lastRefreshTime: null,
+                hasNewContent: false,
+                dailyPosts: 0,
+                lastPostDate: null,
+                isAdmin: false,
+                isSubAdmin: false,
+                sessionToken: null
+            };
+
+            // Clear localStorage
+            localStorage.removeItem('tunedrop_user');
+
+            // Show welcome modal
+            document.querySelector('.app-container').style.display = 'none';
+            document.getElementById('welcome-modal').classList.add('show');
+
+            // Reset welcome form
+            document.getElementById('welcome-form').reset();
+
+            showToast('Logged out successfully', 'info');
+        }
+
+        // Helper function to generate session token
+        function generateSessionToken() {
+            return 'token_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function checkLocalStorageHealth() {
+            console.log('🩺 Checking localStorage health...');
+
+            try {
+                // Test if we can write and read from localStorage
+                const testKey = 'tunedrop_test';
+                const testValue = 'test_' + Date.now();
+
+                localStorage.setItem(testKey, testValue);
+                const retrieved = localStorage.getItem(testKey);
+                localStorage.removeItem(testKey);
+
+                if (retrieved === testValue) {
+                    console.log('✅ localStorage is working correctly');
+                    return true;
+                } else {
+                    console.log('❌ localStorage read/write test failed');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ localStorage test error:', error);
+                return false;
+            }
+        }
+
+        // Call this during initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!checkLocalStorageHealth()) {
+                console.warn('⚠️ localStorage may have issues, using session-only mode');
+                showToast('Local storage issues detected. Login may not be remembered.', 'warning');
+            }
+            // ... rest of initialization
+        });
+
+        function loadFromLocalStorage() {
+            console.log('🔍 Checking localStorage for saved user data...');
+
+            const saved = localStorage.getItem('tunedrop_user');
+            if (!saved) {
+                console.log('❌ No saved user data found in localStorage');
+                return false;
+            }
+
+            try {
+                const userData = JSON.parse(saved);
+                console.log('✅ Found saved user data:', {
+                    username: userData.username,
+                    hasPasswordHash: !!userData.passwordHash,
+                    hasSessionToken: !!userData.sessionToken
+                });
+
+                // Check if we have essential user data
+                if (!userData.username || !userData.passwordHash) {
+                    console.log('❌ Missing essential user data (username or passwordHash)');
+                    return false;
+                }
+
+                // Restore ALL user state
+                window.tunedrop.state.username = userData.username;
+                window.tunedrop.state.dbUsername = userData.dbUsername || userData.username;
+                window.tunedrop.state.passwordHash = userData.passwordHash;
+
+                // Restore collections (convert arrays to Sets)
+                window.tunedrop.state.likedSongs = new Set(userData.likedSongs || []);
+                window.tunedrop.state.dislikedSongs = new Set(userData.dislikedSongs || []);
+                window.tunedrop.state.vaultSongs = new Set(userData.vaultSongs || []);
+                window.tunedrop.state.badges = new Set(userData.badges || []);
+
+                // Restore user stats
+                window.tunedrop.state.userStats = {
+                    posts: 0,
+                    likesGiven: 0,
+                    dislikesGiven: 0,
+                    listens: 0,
+                    likedByOthers: 0,
+                    dislikedByOthers: 0,
+                    ...(userData.userStats || {})
+                };
+
+                // Restore settings
+                window.tunedrop.state.musicService = userData.musicService || 'YouTube Music';
+                window.tunedrop.state.cardLayout = userData.cardLayout || 'double';
+
+                // Restore admin status
+                window.tunedrop.state.isAdmin = userData.isAdmin || false;
+                window.tunedrop.state.isSubAdmin = userData.isSubAdmin || false;
+
+                // Restore session and timing data
+                window.tunedrop.state.sessionToken = userData.sessionToken || null;
+                window.tunedrop.state.lastRefreshTime = userData.lastRefreshTime || null;
+                window.tunedrop.state.dailyPosts = userData.dailyPosts || 0;
+                window.tunedrop.state.lastPostDate = userData.lastPostDate || null;
+
+                // Restore theme
+                if (userData.theme === 'light') {
+                    document.documentElement.classList.remove('dark-theme');
+                    document.documentElement.classList.add('light-theme');
+                } else {
+                    document.documentElement.classList.remove('light-theme');
+                    document.documentElement.classList.add('dark-theme');
+                }
+
+                // Restore accent color
+                if (userData.accentColor) {
+                    document.documentElement.style.setProperty('--accent', userData.accentColor);
+                }
+
+                // Re-check admin status
+                if (window.tunedrop.state.dbUsername) {
+                    const adminStatus = checkAdminStatus(
+                        window.tunedrop.state.username,
+                        window.tunedrop.state.dbUsername
+                    );
+                    window.tunedrop.state.isAdmin = adminStatus.isAdmin;
+                    window.tunedrop.state.isSubAdmin = adminStatus.isAdmin && !adminStatus.isSuperAdmin;
+                }
+
+                console.log('✅ User state restored from localStorage:', {
+                    username: window.tunedrop.state.username,
+                    isAdmin: window.tunedrop.state.isAdmin,
+                    likedSongsCount: window.tunedrop.state.likedSongs.size
+                });
+
+                return true;
+            } catch (error) {
+                console.error('❌ Error loading from localStorage:', error);
+                // Clear corrupted data
+                localStorage.removeItem('tunedrop_user');
+                return false;
+            }
         }
 
         // ========== OFFLINE SUPPORT ==========
@@ -3823,10 +4717,8 @@
             try {
                 if (!navigator.onLine) return false;
 
-                // Get the timestamp of the latest song we have
                 const latestTimestamp = window.tunedrop.state.lastRefreshTime || new Date().toISOString();
 
-                // Query for songs newer than our last refresh
                 const { data: newSongs, error } = await window.tunedrop.supabase
                     .from('items')
                     .select('created_at')
@@ -3860,12 +4752,10 @@
             refreshBtn.disabled = true;
 
             try {
-                // Update refresh time
                 window.tunedrop.state.lastRefreshTime = new Date().toISOString();
                 window.tunedrop.state.hasNewContent = false;
                 refreshBtn.classList.remove('has-updates');
 
-                // Refresh current view
                 switch (window.tunedrop.state.currentTab) {
                     case 'home':
                         await renderHomePage();
@@ -3907,67 +4797,158 @@
                 return;
             }
 
-            const savedUsername = loadFromLocalStorage();
+            // Check if user is already logged in
+            const isLoggedIn = loadFromLocalStorage();
+            console.log('🔐 Login check result:', isLoggedIn);
 
-            if (!savedUsername) {
-                document.getElementById('welcome-modal').classList.add('show');
-            } else {
-                // Load user profile from database
-                const userProfile = await loadUserProfileFromDatabase(window.tunedrop.state.dbUsername);
 
-                if (userProfile) {
-                    window.tunedrop.state.likedSongs = new Set([
-                        ...Array.from(window.tunedrop.state.likedSongs),
-                        ...(userProfile.liked_songs || [])
-                    ]);
-                    window.tunedrop.state.dislikedSongs = new Set([
-                        ...Array.from(window.tunedrop.state.dislikedSongs),
-                        ...(userProfile.disliked_songs || [])
-                    ]);
-                    window.tunedrop.state.vaultSongs = new Set([
-                        ...Array.from(window.tunedrop.state.vaultSongs),
-                        ...(userProfile.vault_songs || [])
-                    ]);
-                    window.tunedrop.state.badges = new Set(userProfile.badges || []);
+            if (isLoggedIn) {
+                console.log('✅ User is logged in from localStorage');
 
-                    // Merge stats properly
-                    window.tunedrop.state.userStats = {
-                        posts: 0,
-                        likesGiven: 0,
-                        dislikesGiven: 0,
-                        listens: 0,
-                        likedByOthers: 0,
-                        dislikedByOthers: 0,
-                        ...userProfile.stats
-                    };
+                // Verify the user still exists in database (optional but good practice)
+                try {
+                    const userProfile = await loadUserProfileFromDatabase(window.tunedrop.state.dbUsername);
 
-                    if (userProfile.settings) {
-                        window.tunedrop.state.cardLayout = userProfile.settings.cardLayout || 'double';
-                        window.tunedrop.state.musicService = userProfile.settings.musicService || 'YouTube Music';
+                    if (userProfile) {
+                        console.log('✅ User profile loaded from database');
+
+                        // Merge any updates from database
+                        window.tunedrop.state.likedSongs = new Set([
+                            ...Array.from(window.tunedrop.state.likedSongs),
+                            ...(userProfile.liked_songs || [])
+                        ]);
+                        window.tunedrop.state.dislikedSongs = new Set([
+                            ...Array.from(window.tunedrop.state.dislikedSongs),
+                            ...(userProfile.disliked_songs || [])
+                        ]);
+                        window.tunedrop.state.vaultSongs = new Set([
+                            ...Array.from(window.tunedrop.state.vaultSongs),
+                            ...(userProfile.vault_songs || [])
+                        ]);
+                        window.tunedrop.state.badges = new Set(userProfile.badges || []);
+
+                        // Update stats with database values
+                        if (userProfile.stats) {
+                            window.tunedrop.state.userStats = {
+                                ...window.tunedrop.state.userStats,
+                                ...userProfile.stats
+                            };
+                        }
+
+                        // Update settings
+                        if (userProfile.settings) {
+                            window.tunedrop.state.cardLayout = userProfile.settings.cardLayout || window.tunedrop.state.cardLayout;
+                            window.tunedrop.state.musicService = userProfile.settings.musicService || window.tunedrop.state.musicService;
+                        }
+
+                        console.log('✅ User data merged with database');
+                    } else {
+                        console.log('⚠️ User not found in database, using localStorage data only');
                     }
+
+                    // Show the app
+                    document.querySelector('.app-container').style.display = 'block';
+                    initializeApp();
+
+                    // Check for new content
+                    setInterval(checkForNewContent, 30000);
+                    setTimeout(checkForNewContent, 5000);
+
+                    // Welcome message
+                    setTimeout(() => {
+                        showToast(`Welcome back, ${window.tunedrop.state.username}!`, 'info');
+                    }, 1000);
+
+                } catch (error) {
+                    console.error('❌ Error verifying user:', error);
+                    // Fallback: still show the app with localStorage data
+                    document.querySelector('.app-container').style.display = 'block';
+                    initializeApp();
+                    showToast(`Welcome back, ${window.tunedrop.state.username}!`, 'info');
                 }
 
-                document.querySelector('.app-container').style.display = 'block';
-                initializeApp();
+            } else {
 
-                // Check for new content periodically
-                setInterval(checkForNewContent, 30000); // Every 30 seconds
+                console.log('❌ User not logged in, showing welcome modal');
+                // Show welcome modal for new/login
+                document.getElementById('welcome-modal').classList.add('show');
+                // // Load user profile from database
+                // const userProfile = await loadUserProfileFromDatabase(window.tunedrop.state.dbUsername);
 
-                // Initial check
-                setTimeout(checkForNewContent, 5000);
+                // if (userProfile) {
+                //     // Merge data from database with local storage
+                //     window.tunedrop.state.likedSongs = new Set([
+                //         ...Array.from(window.tunedrop.state.likedSongs),
+                //         ...(userProfile.liked_songs || [])
+                //     ]);
+                //     window.tunedrop.state.dislikedSongs = new Set([
+                //         ...Array.from(window.tunedrop.state.dislikedSongs),
+                //         ...(userProfile.disliked_songs || [])
+                //     ]);
+                //     window.tunedrop.state.vaultSongs = new Set([
+                //         ...Array.from(window.tunedrop.state.vaultSongs),
+                //         ...(userProfile.vault_songs || [])
+                //     ]);
+                //     window.tunedrop.state.badges = new Set(userProfile.badges || []);
+
+                //     window.tunedrop.state.userStats = {
+                //         posts: 0,
+                //         likesGiven: 0,
+                //         dislikesGiven: 0,
+                //         listens: 0,
+                //         likedByOthers: 0,
+                //         dislikedByOthers: 0,
+                //         ...userProfile.stats
+                //     };
+
+                //     if (userProfile.settings) {
+                //         window.tunedrop.state.cardLayout = userProfile.settings.cardLayout || 'double';
+                //         window.tunedrop.state.musicService = userProfile.settings.musicService || 'YouTube Music';
+                //     }
+                // }
+
+                // document.querySelector('.app-container').style.display = 'block';
+                // initializeApp();
+
+                // // Check for new content periodically
+                // setInterval(checkForNewContent, 30000);
+                // setTimeout(checkForNewContent, 5000);
             }
 
-            // Welcome form submission
+            // Welcome form submission - SIMPLIFIED VERSION
             document.getElementById('welcome-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
 
                 const usernameInput = document.getElementById('welcome-username');
+                const passwordInput = document.getElementById('welcome-password');
+                const confirmPasswordInput = document.getElementById('welcome-confirm-password');
+
                 const username = usernameInput.value.trim();
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+
                 const submitBtn = document.getElementById('submit-username');
                 const originalBtnHTML = submitBtn.innerHTML;
 
-                if (!username) {
-                    showToast('Please enter a username', 'error');
+                // Basic validation
+                if (!username || !password || !confirmPassword) {
+                    showToast('Please fill in all fields', 'error');
+                    return;
+                }
+
+                if (username.length < 3) {
+                    showToast('Username must be at least 3 characters', 'error');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    showToast('Password must be at least 6 characters', 'error');
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    showToast('Passwords do not match', 'error');
+                    confirmPasswordInput.focus();
                     return;
                 }
 
@@ -3975,91 +4956,141 @@
                 submitBtn.innerHTML = '<div class="loading"></div>';
 
                 try {
-                    const { available, error } = await checkUsernameAvailability(username);
+                    console.log('Starting authentication process...');
 
-                    if (error) {
-                        throw new Error(error || 'Failed to check username');
-                    }
+                    // First, try to login
+                    console.log('Attempting login...');
+                    const loginResult = await loginUser(username, password);
 
-                    if (!available) {
-                        showToast('Username already taken. Please choose another.', 'error');
-                        usernameInput.focus();
-                        return;
-                    }
+                    if (loginResult.success) {
+                        // Login successful
+                        console.log('Login successful, loading user data...');
 
-                    // Set username and dbUsername
-                    window.tunedrop.state.username = username;
+                        const userProfile = loginResult.userProfile;
 
-                    // Check if this is an admin username
-                    let dbUsername = username;
-                    const adminStatus = checkAdminStatus(username, username);
-
-                    if (adminStatus.isAdmin) {
-                        // For admin users, use their display name as username
-                        window.tunedrop.state.username = adminStatus.displayName;
-                        window.tunedrop.state.dbUsername = username; // Store the actual admin username
-                        window.tunedrop.state.isAdmin = true;
-                        window.tunedrop.state.isSubAdmin = !adminStatus.isSuperAdmin;
-                    } else {
-                        // For regular users, username = dbUsername
+                        // Set user state
+                        window.tunedrop.state.username = userProfile.display_name;
                         window.tunedrop.state.dbUsername = username;
+                        window.tunedrop.state.passwordHash = userProfile.password_hash;
+
+                        // Load user data
+                        window.tunedrop.state.likedSongs = new Set(userProfile.liked_songs || []);
+                        window.tunedrop.state.dislikedSongs = new Set(userProfile.disliked_songs || []);
+                        window.tunedrop.state.vaultSongs = new Set(userProfile.vault_songs || []);
+                        window.tunedrop.state.badges = new Set(userProfile.badges || []);
+
+                        // Load stats
+                        if (userProfile.stats) {
+                            window.tunedrop.state.userStats = {
+                                posts: userProfile.stats.posts || 0,
+                                likesGiven: userProfile.stats.likesGiven || 0,
+                                dislikesGiven: userProfile.stats.dislikesGiven || 0,
+                                listens: userProfile.stats.listens || 0,
+                                likedByOthers: userProfile.stats.likedByOthers || 0,
+                                dislikedByOthers: userProfile.stats.dislikedByOthers || 0
+                            };
+                        }
+
+                        // Load settings
+                        if (userProfile.settings) {
+                            window.tunedrop.state.cardLayout = userProfile.settings.cardLayout || 'double';
+                            window.tunedrop.state.musicService = userProfile.settings.musicService || 'YouTube Music';
+                        }
+
+                        // Check admin status
+                        const adminStatus = checkAdminStatus(username, username);
+                        window.tunedrop.state.isAdmin = adminStatus.isAdmin;
+                        window.tunedrop.state.isSubAdmin = adminStatus.isAdmin && !adminStatus.isSuperAdmin;
+
+                        showToast(`Welcome back, ${window.tunedrop.state.username}!`, 'success');
+
+                    } else {
+                        // Login failed, try to register
+                        console.log('Login failed, attempting registration...');
+
+                        const registerResult = await registerUser(username, password, username);
+
+                        if (!registerResult.success) {
+                            showToast(registerResult.message || 'Registration failed', 'error');
+                            return;
+                        }
+
+                        // Registration successful
+                        console.log('Registration successful, setting up new user...');
+
+                        const userProfile = registerResult.userProfile;
+
+                        // Set user state for new user
+                        window.tunedrop.state.username = userProfile.display_name;
+                        window.tunedrop.state.dbUsername = username;
+                        window.tunedrop.state.passwordHash = userProfile.password_hash;
+
+                        // Initialize empty sets for new user
+                        window.tunedrop.state.likedSongs = new Set();
+                        window.tunedrop.state.dislikedSongs = new Set();
+                        window.tunedrop.state.vaultSongs = new Set();
+                        window.tunedrop.state.badges = new Set();
+
+                        // Check admin status
+                        const adminStatus = checkAdminStatus(username, username);
+                        window.tunedrop.state.isAdmin = adminStatus.isAdmin;
+                        window.tunedrop.state.isSubAdmin = adminStatus.isAdmin && !adminStatus.isSuperAdmin;
+
+                        showToast(`Welcome to TuneDrop, ${username}!`, 'success');
                     }
 
-                    await saveUserProfileToDatabase();
+                    // Save to local storage
                     saveToLocalStorage();
 
+                    // Close welcome modal and show app
                     document.getElementById('welcome-modal').classList.remove('show');
                     document.querySelector('.app-container').style.display = 'block';
 
+                    // Initialize app
                     initializeApp();
 
-                    showToast(`Welcome, ${window.tunedrop.state.username}!`, 'success');
-
                 } catch (error) {
-                    console.error('Error setting username:', error);
-                    showToast(error.message || 'Failed to set username', 'error');
+                    console.error('Error during authentication:', error);
+                    showToast('An error occurred. Please try again.', 'error');
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = originalBtnHTML;
                 }
             });
 
-            // Real-time username checking
-            document.getElementById('welcome-username').addEventListener('input', async function () {
-                const username = this.value.trim();
-                const feedback = document.getElementById('username-feedback');
+            // Password strength indicator
+            document.getElementById('welcome-password').addEventListener('input', function () {
+                const password = this.value;
+                const strengthBar = document.getElementById('password-strength-bar');
+                const strength = checkPasswordStrength(password);
 
-                if (username.length < 3) {
-                    feedback.style.display = 'none';
-                    return;
+                strengthBar.className = 'password-strength-bar';
+                if (strength === 0) {
+                    strengthBar.style.width = '0%';
+                } else if (strength === 1) {
+                    strengthBar.className += ' weak';
+                    strengthBar.style.width = '33%';
+                } else if (strength === 2) {
+                    strengthBar.className += ' medium';
+                    strengthBar.style.width = '66%';
+                } else if (strength >= 3) {
+                    strengthBar.className += ' strong';
+                    strengthBar.style.width = '100%';
                 }
+            });
 
-                feedback.style.display = 'block';
-                feedback.innerHTML = '<div class="loading"></div>';
-                feedback.className = 'username-check';
-
-                try {
-                    const { available, error } = await checkUsernameAvailability(username);
-
-                    if (available) {
-                        feedback.className = 'username-available';
-                        feedback.textContent = '✓ Username available';
-                    } else {
-                        feedback.className = 'username-taken';
-                        feedback.textContent = error || '✗ Username already taken';
-                    }
-                } catch (error) {
-                    feedback.style.display = 'none';
-                }
+            // Toggle password visibility in welcome modal
+            document.getElementById('toggle-password').addEventListener('click', function () {
+                const passwordInput = document.getElementById('welcome-password');
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.innerHTML = type === 'password' ? '<i class="ri-eye-line"></i>' : '<i class="ri-eye-off-line"></i>';
             });
         });
 
         function initializeApp() {
             window.tunedrop.elements = {
                 songGrid: document.getElementById('song-grid'),
-                installPrompt: document.getElementById('install-prompt'),
-                installBtn: document.getElementById('install-btn'),
-                dismissInstall: document.getElementById('dismiss-install'),
                 postModal: document.getElementById('post-modal'),
                 postForm: document.getElementById('post-form'),
                 closePostModal: document.getElementById('close-post-modal'),
@@ -4070,7 +5101,6 @@
                 themeToggle: document.getElementById('theme-toggle'),
                 colorOptions: document.getElementById('color-options'),
                 serviceSelect: document.getElementById('service-select'),
-                usernameInput: document.getElementById('username-input'),
                 saveSettings: document.getElementById('save-settings'),
                 cleanVault: document.getElementById('clean-vault'),
                 toast: document.getElementById('toast'),
@@ -4093,16 +5123,70 @@
                 favGrid: document.getElementById('fav-grid'),
                 listenedGrid: document.getElementById('listened-grid'),
                 refreshBtn: document.getElementById('refresh-btn'),
-                postLimitWarning: document.getElementById('post-limit-warning')
+                postLimitWarning: document.getElementById('post-limit-warning'),
+                deleteConfirmModal: document.getElementById('delete-confirm-modal'),
+                cancelDelete: document.getElementById('cancel-delete'),
+                confirmDelete: document.getElementById('confirm-delete'),
+                passwordDisplay: document.getElementById('password-display'),
+                togglePasswordDisplay: document.getElementById('toggle-password-display'),
+                settingsUsername: document.getElementById('settings-username')
             };
 
-            // Set username in settings
-            if (window.tunedrop.elements.usernameInput) {
-                window.tunedrop.elements.usernameInput.value = window.tunedrop.state.username;
+            function checkPlayerButtonState() {
+                const playerFavoriteBtn = document.getElementById('player-favorite');
+                console.log('Player favorite button state:', {
+                    exists: !!playerFavoriteBtn,
+                    hasClickListener: playerFavoriteBtn ?
+                        playerFavoriteBtn.hasAttribute('data-listener') : false,
+                    currentPlaying: window.tunedrop.state.currentPlaying,
+                    isLiked: window.tunedrop.state.currentPlaying ?
+                        window.tunedrop.state.likedSongs.has(window.tunedrop.state.currentPlaying.id.toString()) : false
+                });
+            }
+
+            // Call this in initializeApp after setting up event listeners
+            setTimeout(checkPlayerButtonState, 1000);
+
+            // Set username in settings display
+            if (window.tunedrop.elements.settingsUsername) {
+                window.tunedrop.elements.settingsUsername.textContent = window.tunedrop.state.username;
+            }
+            // Logout button
+            if (document.getElementById('logout-btn')) {
+                document.getElementById('logout-btn').addEventListener('click', logoutUser);
+            }
+
+            // Set password display (always show asterisks)
+            if (window.tunedrop.elements.passwordDisplay) {
+                window.tunedrop.elements.passwordDisplay.value = '••••••••';
             }
 
             // Update stats display
             updateStatsDisplay();
+
+            // Toggle password display in settings
+            window.tunedrop.elements.togglePasswordDisplay.addEventListener('click', function () {
+                const passwordDisplay = window.tunedrop.elements.passwordDisplay;
+                const isHidden = passwordDisplay.classList.contains('hidden');
+
+                if (isHidden) {
+                    passwordDisplay.classList.remove('hidden');
+                    passwordDisplay.type = 'text';
+                    this.innerHTML = '<i class="ri-eye-off-line"></i>';
+                } else {
+                    passwordDisplay.classList.add('hidden');
+                    passwordDisplay.type = 'password';
+                    this.innerHTML = '<i class="ri-eye-line"></i>';
+                }
+            });
+
+            // Delete confirmation modal handlers
+            window.tunedrop.elements.cancelDelete.addEventListener('click', function () {
+                window.tunedrop.elements.deleteConfirmModal.classList.remove('show');
+                window.tunedrop.pendingDeleteSongId = null;
+            });
+
+            window.tunedrop.elements.confirmDelete.addEventListener('click', confirmDeleteSong);
 
             // Initialize vault tabs
             const vaultTabButtons = window.tunedrop.elements.vaultTabs.querySelectorAll('.vault-tab-btn');
@@ -4110,13 +5194,11 @@
                 btn.addEventListener('click', () => {
                     const tab = btn.dataset.vaultTab;
 
-                    // Update active tab
                     vaultTabButtons.forEach(b => {
                         b.classList.remove('active');
                     });
                     btn.classList.add('active');
 
-                    // Show active content
                     document.querySelectorAll('.vault-content').forEach(content => {
                         content.classList.remove('active');
                     });
@@ -4135,7 +5217,17 @@
             window.tunedrop.elements.refreshBtn.addEventListener('click', refreshContent);
 
             // Player Favorite button
+            // Player Favorite button - Make sure this is properly set
             window.tunedrop.elements.playerFavorite.addEventListener('click', handlePlayerFavorite);
+            console.log('Player favorite button event listener attached');
+
+            // Add a backup click handler using event delegation
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('#player-favorite')) {
+                    console.log('Player favorite button clicked via event delegation');
+                    handlePlayerFavorite();
+                }
+            });
 
             // Player Scaffold Events
             window.tunedrop.elements.playerClose.addEventListener('click', hidePlayerScaffold);
@@ -4165,7 +5257,6 @@
 
             // Post Modal Events
             window.tunedrop.elements.postFab.addEventListener('click', async () => {
-                // Check daily post limit before showing modal
                 const canPost = await checkDailyPostLimit();
 
                 if (!canPost) {
@@ -4201,7 +5292,7 @@
                 }
             });
 
-            // Mood selector with improved icons
+            // Mood selector
             document.querySelectorAll('.mood-option').forEach(option => {
                 option.addEventListener('click', () => {
                     document.querySelectorAll('.mood-option').forEach(opt => {
@@ -4212,8 +5303,7 @@
                 });
             });
 
-            // Replace the ENTIRE post form event listener with this:
-
+            // Post form submission
             window.tunedrop.elements.postForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 console.log('Post form submission started');
@@ -4225,7 +5315,6 @@
                 submitBtn.innerHTML = '<div class="loading"></div>';
 
                 try {
-                    // 1. Check daily post limit
                     const canPost = await checkDailyPostLimit();
                     if (!canPost) {
                         showToast(`Daily limit reached (${ADMIN_CONFIG.dailyPostLimit} posts/day)`, 'warning');
@@ -4234,7 +5323,6 @@
                         return;
                     }
 
-                    // 2. Get form values
                     const title = document.getElementById('song-title').value.trim();
                     const artist = document.getElementById('song-artist').value.trim();
                     const language = document.getElementById('song-language').value;
@@ -4244,7 +5332,6 @@
 
                     console.log('Form values:', { title, artist, language, mood, originalLink, isPlaylist });
 
-                    // 3. Basic validation
                     if (!title || title.length < 3) {
                         throw new Error('Title must be at least 3 characters');
                     }
@@ -4265,7 +5352,6 @@
                         throw new Error('Please enter a valid URL (must start with http:// or https://)');
                     }
 
-                    // 4. Create song object
                     const newSong = {
                         title: title,
                         artist: artist || 'Unknown Artist',
@@ -4282,11 +5368,10 @@
 
                     console.log('Submitting song:', newSong);
 
-                    // 5. Submit to database
                     const { data, error } = await window.tunedrop.supabase
                         .from('items')
                         .insert([newSong])
-                        .select(); // Add .select() to get response
+                        .select();
 
                     if (error) {
                         console.error('Database error:', error);
@@ -4295,35 +5380,27 @@
 
                     console.log('Database response:', data);
 
-                    // 6. Update user stats
                     window.tunedrop.state.userStats.posts = (window.tunedrop.state.userStats.posts || 0) + 1;
                     window.tunedrop.state.dailyPosts += 1;
                     window.tunedrop.state.lastPostDate = new Date().toISOString().split('T')[0];
 
-                    // 7. Save user profile
                     await saveUserProfileToDatabase();
                     saveToLocalStorage();
 
-                    // 8. Update stats display
                     updateStatsDisplay();
 
-                    // 9. Show success message
                     showToast('Track dropped successfully!', 'success');
 
-                    // 10. Close modal and reset form
                     window.tunedrop.elements.postModal.classList.remove('show');
                     window.tunedrop.elements.postForm.reset();
 
-                    // Reset mood selection
                     document.querySelectorAll('.mood-option').forEach(opt => {
                         opt.classList.remove('active');
                     });
                     document.getElementById('selected-mood').value = '';
 
-                    // Reset playlist toggle
                     document.getElementById('is-playlist').checked = false;
 
-                    // 11. Refresh home page
                     await renderHomePage();
 
                 } catch (error) {
@@ -4445,43 +5522,16 @@
                 });
             }
 
-            // Save settings
+            // Save settings (only save theme/color/layout changes)
             window.tunedrop.elements.saveSettings.addEventListener('click', async () => {
-                const username = window.tunedrop.elements.usernameInput.value.trim();
-                if (username && username !== window.tunedrop.state.username) {
-                    const { available } = await checkUsernameAvailability(username);
-
-                    if (!available) {
-                        showToast('Username already taken', 'error');
-                        return;
-                    }
-
-                    // Don't allow regular users to change to admin usernames
-                    if (username.toLowerCase().startsWith('admin') && !window.tunedrop.state.isAdmin) {
-                        showToast('Usernames starting with "admin" are reserved', 'error');
-                        return;
-                    }
-
-                    window.tunedrop.state.username = username;
-                    // For regular users, also update dbUsername
-                    if (!window.tunedrop.state.isAdmin) {
-                        window.tunedrop.state.dbUsername = username;
-                    }
-
-                    await saveUserProfileToDatabase();
-                    saveToLocalStorage();
-                    showToast('Username updated!', 'success');
-                } else {
-                    showToast('Settings saved!', 'success');
-                }
+                // Username cannot be changed after setup
+                showToast('Settings saved!', 'success');
                 window.tunedrop.elements.settingsModal.classList.remove('show');
             });
 
             // Clean vault with warning
             window.tunedrop.elements.cleanVault.addEventListener('click', () => {
-                // Close settings modal first
                 window.tunedrop.elements.settingsModal.classList.remove('show');
-                // Then show warning modal
                 setTimeout(() => {
                     window.tunedrop.elements.warningModal.classList.add('show');
                 }, 300);
@@ -4531,7 +5581,7 @@
                 });
             });
 
-            // Time filter for rank page - FIXED SCROLLABLE
+            // Time filter for rank page
             window.tunedrop.elements.timeFilter.addEventListener('click', (e) => {
                 if (e.target.classList.contains('time-filter-btn')) {
                     document.querySelectorAll('.time-filter-btn').forEach(btn => {
@@ -4555,15 +5605,13 @@
                 }
             });
 
-            // Navigation tabs - FIXED CLICK ISSUE
+            // Navigation tabs
             const navButtons = document.querySelectorAll('.nav-btn');
             navButtons.forEach(btn => {
-                // Remove existing listeners
                 const newBtn = btn.cloneNode(true);
                 btn.parentNode.replaceChild(newBtn, btn);
             });
 
-            // Re-select buttons after cloning
             const updatedNavButtons = document.querySelectorAll('.nav-btn');
             updatedNavButtons.forEach(btn => {
                 btn.addEventListener('click', handleNavClick);
@@ -4572,13 +5620,11 @@
             function handleNavClick(e) {
                 const tab = e.currentTarget.dataset.tab;
 
-                // Update active tab
                 updatedNavButtons.forEach(b => {
                     b.classList.remove('active');
                 });
                 e.currentTarget.classList.add('active');
 
-                // Show/hide filter section
                 if (window.tunedrop.elements.filterSection) {
                     if (tab === 'home') {
                         window.tunedrop.elements.filterSection.classList.remove('hidden');
@@ -4587,7 +5633,6 @@
                     }
                 }
 
-                // Show active page
                 document.querySelectorAll('.tab-page').forEach(page => {
                     page.classList.remove('active');
                 });
@@ -4595,7 +5640,6 @@
 
                 window.tunedrop.state.currentTab = tab;
 
-                // Load content for tab
                 switch (tab) {
                     case 'home':
                         renderHomePage();
@@ -4634,6 +5678,13 @@
                         await handleDeleteSong(songId);
                         break;
                     case 'listen':
+                        // Store poster info before handling listen
+                        if (card) {
+                            window.tunedrop.state.currentPlaying = {
+                                id: songId,
+                                poster: card.dataset.poster // Store poster
+                            };
+                        }
                         handleListen(songId, originalLink, songPoster);
                         break;
                     case 'original-link':
@@ -4642,38 +5693,17 @@
                 }
             });
 
-            // PWA Installation
+            // Remove PWA installation prompts (using browser's native prompt)
             let deferredPrompt;
-
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 deferredPrompt = e;
-                window.tunedrop.elements.installPrompt.style.display = 'flex';
-            });
 
-            window.tunedrop.elements.installBtn.addEventListener('click', async () => {
-                if (!deferredPrompt) return;
+                // You can show a subtle indicator if you want, but not a big banner
+                console.log('PWA install available');
 
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-
-                if (outcome === 'accepted') {
-                    showToast('TuneDrop installed successfully!', 'success');
-                }
-
-                window.tunedrop.elements.installPrompt.style.display = 'none';
-                deferredPrompt = null;
-            });
-
-            window.tunedrop.elements.dismissInstall.addEventListener('click', () => {
-                window.tunedrop.elements.installPrompt.style.display = 'none';
-            });
-
-            // Ad click handlers
-            document.querySelectorAll('.ad-container').forEach(ad => {
-                ad.addEventListener('click', () => {
-                    showToast('Upgrade to Premium to remove ads', 'info');
-                });
+                // Optionally show a small toast
+                // showToast('Add TuneDrop to your home screen for better experience', 'info');
             });
 
             // Initial render
@@ -4702,12 +5732,14 @@
                 const title = card.dataset.title;
                 const artist = card.dataset.artist;
                 const link = card.dataset.link;
+                const poster = card.dataset.poster; // Get poster from card
 
                 window.tunedrop.state.currentPlaying = {
                     id: songId,
                     title: title,
                     artist: artist,
-                    link: link
+                    link: link,
+                    poster: poster // Store poster info
                 };
 
                 showPlayerScaffold(title, artist, link);
@@ -4715,12 +5747,17 @@
                 // Update player favorite button based on liked status
                 const isLiked = window.tunedrop.state.likedSongs.has(songId.toString());
                 const playerFavoriteBtn = document.getElementById('player-favorite');
+
+                console.log('Updating player favorite button. Song liked?', isLiked);
+
                 if (isLiked) {
                     playerFavoriteBtn.classList.add('active');
                     playerFavoriteBtn.innerHTML = '<i class="ri-heart-fill"></i>';
+                    playerFavoriteBtn.title = 'Remove from favorites';
                 } else {
                     playerFavoriteBtn.classList.remove('active');
                     playerFavoriteBtn.innerHTML = '<i class="ri-heart-line"></i>';
+                    playerFavoriteBtn.title = 'Add to favorites';
                 }
 
                 if (originalLink) {
@@ -4742,6 +5779,10 @@
 
                     window.open(searchUrl, '_blank');
                 }
+            } else {
+                // If card not found (shouldn't happen, but just in case)
+                console.log('Song card not found during handleListen');
+                showToast('Song played!', 'success');
             }
 
             saveUserProfileToDatabase();
@@ -4766,6 +5807,7 @@
             const playerTitle = document.getElementById('player-title');
             const playerArtist = document.getElementById('player-artist');
             const playerLink = document.getElementById('player-link');
+            const playerFavoriteBtn = document.getElementById('player-favorite');
 
             playerTitle.textContent = title || 'Unknown Title';
             playerArtist.textContent = artist || 'Unknown Artist';
@@ -4777,7 +5819,24 @@
                 playerLink.style.display = 'none';
             }
 
+            // Ensure favorite button has correct initial state
+            if (window.tunedrop.state.currentPlaying) {
+                const songId = window.tunedrop.state.currentPlaying.id;
+                const isLiked = window.tunedrop.state.likedSongs.has(songId.toString());
+
+                if (isLiked) {
+                    playerFavoriteBtn.classList.add('active');
+                    playerFavoriteBtn.innerHTML = '<i class="ri-heart-fill"></i>';
+                    playerFavoriteBtn.title = 'Remove from favorites';
+                } else {
+                    playerFavoriteBtn.classList.remove('active');
+                    playerFavoriteBtn.innerHTML = '<i class="ri-heart-line"></i>';
+                    playerFavoriteBtn.title = 'Add to favorites';
+                }
+            }
+
             player.classList.add('show');
+            console.log('Player scaffold shown with song:', title);
         }
 
         function hidePlayerScaffold() {
@@ -4804,6 +5863,5 @@
         }
     </script>
 </body>
-
 
 </html>
