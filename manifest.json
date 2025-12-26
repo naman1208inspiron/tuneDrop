@@ -6,6 +6,7 @@
     "background_color": "#121826",
     "display": "standalone",
     "orientation": "portrait",
+    "prefer_related_applications": false,
     "scope": "/",
     "start_url": "/",
     "icons": [
@@ -20,4 +21,5 @@
             "type": "image/png"
         }
     ]
+
 }
